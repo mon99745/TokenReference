@@ -1,0 +1,8 @@
+server:
+### ?? WAS ??
+  port: 8000
+
+keyPair:
+  path: C:/git-personal/demo/files/
+  algorithm: RSA
+  keySize: 2048
