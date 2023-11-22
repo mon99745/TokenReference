@@ -1,4 +1,4 @@
-package com.example.demo.keypair;
+package com.example.demo.config;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -23,12 +23,13 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
-
+@Getter
 @Configuration
 public class RsaKeyGenerator implements InitializingBean {
 	private static final Logger LOGGER = LoggerFactory.getLogger(RsaKeyGenerator.class);
@@ -72,7 +73,7 @@ public class RsaKeyGenerator implements InitializingBean {
 	}
 
 	/**
-	 * 키 파일을 생성하는 메소드, 무조건 파일을 모두 새로 생성한다.
+	 * 키 파일을 생성하는 메소드, 무조건 파일을 모두 새로 생성
 	 */
 	private void createKeyFile() throws IOException, NoSuchAlgorithmException {
 		KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(this.algorithm);
@@ -112,7 +113,7 @@ public class RsaKeyGenerator implements InitializingBean {
 	}
 
 	/**
-	 * 키 파일을 읽어 리턴하는 메소드, 없을 경우 새로 생성한다.
+	 * 키 파일을 읽어 리턴하는 메소드, 없을 경우 새로 생성
 	 */
 	public PrivateKey getPrivateKey() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
 		if (!keyFileCheck()) {
@@ -126,7 +127,7 @@ public class RsaKeyGenerator implements InitializingBean {
 	}
 
 	/**
-	 * 키 파일을 읽어 리턴하는 메소드, 없을 경우 새로 생성한다.
+	 * 키 파일을 읽어 리턴하는 메소드, 없을 경우 새로 생성
 	 */
 	public PublicKey getPublicKey() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
 		if (!keyFileCheck()) {
@@ -140,9 +141,9 @@ public class RsaKeyGenerator implements InitializingBean {
 	}
 
 	/**
-	 * public 키로 암호화를 한다.
+	 * public 키로 암호화
 	 */
-	public String encryptRSA(String plainText) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+	public String encryptPubRSA(String plainText) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
 		PublicKey publicKey = getPublicKey();
 		Cipher cipher = Cipher.getInstance("RSA");
 		cipher.init(Cipher.ENCRYPT_MODE, publicKey);
@@ -152,13 +153,38 @@ public class RsaKeyGenerator implements InitializingBean {
 	}
 
 	/**
-	 * private 키로 복호화를 한다.
+	 * private 키로 복호화
 	 */
-	public String decryptRSA(String encrypted) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException{
+	public String decryptPrvRSA(String encrypted) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException{
 		PrivateKey privateKey = getPrivateKey();
 		Cipher cipher2 = Cipher.getInstance("RSA");
 		byte[] byteEncrypted = Base64.getDecoder().decode(encrypted.getBytes());
 		cipher2.init(Cipher.DECRYPT_MODE, privateKey);
+		byte[] bytePlain = cipher2.doFinal(byteEncrypted);
+		String decrypted = new String(bytePlain, "utf-8");
+		return decrypted;
+	}
+
+	/**
+	 * private 키로 암호화
+	 */
+	public String encryptPrvRSA(String plainText) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+		PrivateKey privateKey = getPrivateKey();
+		Cipher cipher = Cipher.getInstance("RSA");
+		cipher.init(Cipher.ENCRYPT_MODE, privateKey);
+		byte[] bytePlain = cipher.doFinal(plainText.getBytes());
+		String encrypted = Base64.getEncoder().encodeToString(bytePlain);
+		return encrypted;
+	}
+
+	/**
+	 * private 키로 복호화
+	 */
+	public String decryptPubRSA(String encrypted) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException{
+		PublicKey publicKey = getPublicKey();
+		Cipher cipher2 = Cipher.getInstance("RSA");
+		byte[] byteEncrypted = Base64.getDecoder().decode(encrypted.getBytes());
+		cipher2.init(Cipher.DECRYPT_MODE, publicKey);
 		byte[] bytePlain = cipher2.doFinal(byteEncrypted);
 		String decrypted = new String(bytePlain, "utf-8");
 		return decrypted;

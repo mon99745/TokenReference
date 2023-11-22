@@ -1,12 +1,11 @@
 plugins {
 	id 'java'
 	id 'war'
-//	id 'org.springframework.boot' version '3.1.2'
 	id 'org.springframework.boot' version '2.5.6'
 	id 'io.spring.dependency-management' version '1.1.2'
 }
 
-group = 'com.example.json'
+group = 'com.claim.json'
 version = '0.0.1-SNAPSHOT'
 
 java {
@@ -29,12 +28,18 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.apache.commons:commons-lang3:3.12.0'
+	implementation 'org.bitcoinj:bitcoinj-core:0.15.10'
+	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
+	implementation 'com.github.wnameless.json:json-flattener:0.16.0'
+	implementation 'com.google.code.gson:gson'
+	implementation 'com.google.guava:guava:31.1-jre'
+
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 }
 
 tasks.named('test') {
