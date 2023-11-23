@@ -34,11 +34,13 @@ dependencies {
 	implementation 'com.github.wnameless.json:json-flattener:0.16.0'
 	implementation 'com.google.code.gson:gson'
 	implementation 'com.google.guava:guava:31.1-jre'
-
-	compileOnly 'org.projectlombok:lombok'
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	implementation 'org.projectlombok:lombok'
+	implementation 'org.springframework.boot:spring-boot-devtools'
+	implementation 'org.slf4j:slf4j-api:1.7.32'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 	annotationProcessor 'org.projectlombok:lombok'
+
+	testImplementation 'junit:junit:4.12'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
