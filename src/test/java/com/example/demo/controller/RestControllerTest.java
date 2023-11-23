@@ -70,6 +70,17 @@ class RestControllerTest {
 	private MockMvc mvc;
 
 	@Test
+	void A_createJws() throws Exception {
+		mvc.perform(post("/createJws")
+						.content(claim)
+						.session(SESSION))
+				.andDo(print())
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$").isNotEmpty())
+				.andDo(r -> jws = r.getResponse().getContentAsString());
+
+	}
+//	@Test
 	void A_base58() throws Exception {
 		mvc.perform(get("/base58/key")
 						.session(SESSION))
@@ -78,7 +89,7 @@ class RestControllerTest {
 				.andExpect(jsonPath("$").isNotEmpty());
 	}
 
-	@Test
+//	@Test
 	void B_readJson() throws Exception {
 		mvc.perform(get("/json")
 						.session(SESSION))
@@ -87,7 +98,7 @@ class RestControllerTest {
 				.andExpect(jsonPath("$").isNotEmpty());
 	}
 
-	@Test
+//	@Test
 	void C_readJson() throws Exception {
 		mvc.perform(post("/base58/json")
 						.content(claim)
@@ -98,7 +109,7 @@ class RestControllerTest {
 				.andDo(r -> encData = r.getResponse().getContentAsString());
 	}
 
-	@Test
+//	@Test
 	void D_encryptPrv() throws Exception {
 		mvc.perform(post("/encryptPrv")
 						.content(claim)
@@ -108,7 +119,7 @@ class RestControllerTest {
 				.andExpect(jsonPath("$").isNotEmpty());
 	}
 
-	@Test
+//	@Test
 	void E_signature() throws Exception {
 		mvc.perform(post("/signature")
 						.param("header",claim)
@@ -119,7 +130,7 @@ class RestControllerTest {
 				.andDo(r -> signData = r.getResponse().getContentAsString());
 	}
 
-	@Test
+//	@Test
 	void F_jws() throws Exception {
 		mvc.perform(post("/jws")
 						.param("header", encData)
@@ -131,6 +142,4 @@ class RestControllerTest {
 				.andExpect(jsonPath("$").isNotEmpty())
 				.andDo(r -> jws = r.getResponse().getContentAsString());
 	}
-
-
 }

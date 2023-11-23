@@ -178,7 +178,7 @@ public class RsaKeyGenerator implements InitializingBean {
 	}
 
 	/**
-	 * private 키로 복호화
+	 * public 키로 복호화
 	 */
 	public String decryptPubRSA(String encrypted) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException{
 		PublicKey publicKey = getPublicKey();

@@ -154,4 +154,89 @@ public class RestController {
 		return jws;
 	}
 
+	/**
+	 * JWS 토큰 발행
+	 * @param claim
+	 * @return
+	 * @throws IOException
+	 * @throws NoSuchPaddingException
+	 * @throws IllegalBlockSizeException
+	 * @throws NoSuchAlgorithmException
+	 * @throws InvalidKeySpecException
+	 * @throws BadPaddingException
+	 * @throws InvalidKeyException
+	 */
+	@PostMapping("createJws")
+	public String createJws(@RequestBody String claim) throws IOException, NoSuchPaddingException,
+			IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException,
+			InvalidKeyException {
+
+		String header = "";
+		String payload = "";
+		String signature = "";
+
+		// Base58 로 암호화 - 위변조 방지
+		byte[] byteData = ByteUtil.objectToBytes(claim);
+		header = Base58.encode(byteData);
+		System.out.println("header = " + header);
+
+		// 서명 - 부인방지
+		signature = rsaKeyGenerator.encryptPrvRSA(header);
+		System.out.println("signature = " + signature);
+
+
+		String jws = header + "." + payload + "." + signature;
+		System.out.println("jws = " + jws);
+		return jws;
+	}
+
+	/**
+	 * JWS 토큰 검증
+	 * @param jws
+	 * @return
+	 * @throws NoSuchPaddingException
+	 * @throws IllegalBlockSizeException
+	 * @throws NoSuchAlgorithmException
+	 * @throws InvalidKeySpecException
+	 * @throws IOException
+	 * @throws BadPaddingException
+	 * @throws InvalidKeyException
+	 */
+	@PostMapping("verifyJws")
+	public String verifyJws(@RequestBody String jws) throws NoSuchPaddingException, IllegalBlockSizeException,
+			NoSuchAlgorithmException, InvalidKeySpecException, IOException, BadPaddingException, InvalidKeyException {
+
+		String header = "";
+		String payload = "";
+		String signature = "";
+
+		String result = "";
+
+		String[] splitArray = jws.split("\\.");
+
+		for (int i = 0; i < splitArray.length; i++) {
+			if (i == 0) {
+				header = splitArray[i];
+			} else if (i == 1) {
+				payload = splitArray[i];
+			} else if (i == 2) {
+				signature = splitArray[i];
+			}
+		}
+
+		header = String.valueOf(Base58.decode(header));
+
+		signature = rsaKeyGenerator.decryptPubRSA(signature);
+		signature = String.valueOf(Base58.decode(signature));
+
+		if(header.equals(signature)){
+			result = "Success";
+		} else {
+			result = "Fail";
+		}
+
+		return result;
+	}
+
+
 }
