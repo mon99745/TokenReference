@@ -20,7 +20,6 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
-@Slf4j
 @org.springframework.web.bind.annotation.RestController
 public class RestController {
 
@@ -94,7 +93,7 @@ public class RestController {
 		String encData = Base58.encode(byteData);
 		System.out.println("encData = " + encData);
 
-		return "Success";
+		return encData;
 	}
 
 	/**
@@ -117,8 +116,7 @@ public class RestController {
 		String encData = rsaKeyGenerator.encryptPrvRSA(strData);
 		System.out.println("encData = " + encData);
 
-		return "Success";
-
+		return encData;
 	}
 
 	/**
@@ -139,7 +137,7 @@ public class RestController {
 		String signature = rsaKeyGenerator.encryptPrvRSA(header);
 		System.out.println("signature = " + signature);
 
-		return "Success";
+		return signature;
 	}
 
 	/**
@@ -149,11 +147,11 @@ public class RestController {
 	 * @param signature
 	 * @return
 	 */
-	@PostMapping("jwt")
-	public String jwt(String header, String payload, String signature){
-		String jws = header + payload + signature;
+	@PostMapping("jws")
+	public String jws(String header, String payload, String signature){
+		String jws = header + "." + payload + "." + signature;
 		System.out.println("jws = " + jws);
-		return "Success";
+		return jws;
 	}
 
 }
