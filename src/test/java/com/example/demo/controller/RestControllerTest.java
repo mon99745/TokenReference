@@ -2,16 +2,10 @@ package com.example.demo.controller;
 
 
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.Before;
 import org.junit.FixMethodOrder;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
@@ -40,31 +34,24 @@ class RestControllerTest {
 	/**
 	 * Header
 	 */
-	private static String encData = "2AMZFXZo3dkKWhwEEEDzUwawXt1qYjrw2HtnX" +
-			"ucWioP8DxKVGhYVQyLRHpv1Am56LkQPzVcKoJhTc85qRbuUGjU6v5i";
+	private static String encData = "5wX24gGwoapzavxLxduxLckpH5Wx1BLrdgoebHf9FJRQrYQ1QVCXGzm9w6tLfPgeWQcqEFEmqCj4Jsv6g";
 
 	/**
 	 * Signature
 	 */
-	private static String signData = "acPB/W98eBOJe8Gmc9MgIBzE1qgkTFZHR2Z" +
-			"SFZD8wpPZFfbVxqQUCv05U4jbA0z5pt+Utqw10EW8oTb/XVA5jX/fYgLlvCk" +
-			"dmbe8ixxEmubWntjKZiQ8qS+SM8ueyiJIOFFhC5J3TR7wVCNDqrueeybNXPu" +
-			"MXBPJ4oP4lGVyVEvbtrN2/t1CzvtYZFcz4q6SUP4RFJiJp+ltKt8GJhxDZ77" +
-			"kfGG99aAPbdOEaiegsRLDJ/Aab7o5jDIwifR7oZ4kZPeBH+8ONcI6soxnq5D" +
-			"ha9ZDKkAeCClEBWkw/l6KpjUZisnvTarKbNg3DXmHx8A+Iv4H0ENSFWQ/z3m" +
-			"cFcXasw==";
+	private static String signData = "aLJON4wPZ+79ePLBe6CIDT5KPsIEVeTKvhAstUJLE9YrBEBL+4/4ZKehZJwvGZWuxjnaugQ05w" +
+			"09pvmUrlL0MM9COB1IiMT2I8STmpRGHLo3pnrjh+An9PSIaRFstT4EnrWxNQuvn6eEIttbwxLeKurPo5TpnLegOwWR5MJzimNtQ" +
+			"M+KKkaFlsc8ADj+e6033ZAdNClTHDe/jZXmtGDei/kcDA4Ofw3jN/539LyrnEvJ+leSNFtTi+xY0+7aL5zZxz+e4iIET9T2z5Z5" +
+			"NckiF8r/+du7gBjbRjZiN+I1W2OMSV5XGu5FvjWQ9JnzCjjNPs35PJtoXaJcblNBbzmLrA==";
 
 	/**
 	 * JWT
 	 */
-	private static String jws = "2AMZFXZo3dkKWhwEEEDzUwawXt1qYjrw2HtnXucWi" +
-			"oP8DxKVGhYVQyLRHpv1Am56LkQPzVcKoJhTc85qRbuUGjU6v5i..acPB/W98e" +
-			"BOJe8Gmc9MgIBzE1qgkTFZHR2ZSFZD8wpPZFfbVxqQUCv05U4jbA0z5pt+Utq" +
-			"w10EW8oTb/XVA5jX/fYgLlvCkdmbe8ixxEmubWntjKZiQ8qS+SM8ueyiJIOFF" +
-			"hC5J3TR7wVCNDqrueeybNXPuMXBPJ4oP4lGVyVEvbtrN2/t1CzvtYZFcz4q6S" +
-			"UP4RFJiJp+ltKt8GJhxDZ77kfGG99aAPbdOEaiegsRLDJ/Aab7o5jDIwifR7o" +
-			"Z4kZPeBH+8ONcI6soxnq5Dha9ZDKkAeCClEBWkw/l6KpjUZisnvTarKbNg3DX" +
-			"mHx8A+Iv4H0ENSFWQ/z3mcFcXasw==";
+	private static String jws = "5wX24gGwoapzavxLxduxLckpH5Wx1BLrdgoebHf9FJRQrYQ1QVCXGzm9w6tLfPgeWQcqEFEmqCj4Jsv6" +
+			"g..aLJON4wPZ+79ePLBe6CIDT5KPsIEVeTKvhAstUJLE9YrBEBL+4/4ZKehZJwvGZWuxjnaugQ05w09pvmUrlL0MM9COB1IiMT2I" +
+			"8STmpRGHLo3pnrjh+An9PSIaRFstT4EnrWxNQuvn6eEIttbwxLeKurPo5TpnLegOwWR5MJzimNtQM+KKkaFlsc8ADj+e6033ZAdN" +
+			"ClTHDe/jZXmtGDei/kcDA4Ofw3jN/539LyrnEvJ+leSNFtTi+xY0+7aL5zZxz+e4iIET9T2z5Z5NckiF8r/+du7gBjbRjZiN+I1W" +
+			"2OMSV5XGu5FvjWQ9JnzCjjNPs35PJtoXaJcblNBbzmLrA==";
 
 	@Autowired
 	private MockMvc mvc;
@@ -80,6 +67,18 @@ class RestControllerTest {
 				.andDo(r -> jws = r.getResponse().getContentAsString());
 
 	}
+
+	@Test
+	void B_verifyJws() throws Exception {
+		mvc.perform(post("/verifyJws")
+						.content(jws)
+						.session(SESSION))
+				.andDo(print())
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$").isNotEmpty());
+	}
+
+
 //	@Test
 	void A_base58() throws Exception {
 		mvc.perform(get("/base58/key")
