@@ -1,8 +1,8 @@
 # Demo
-JWT
+JWT(Json Web Token)
 
-* JWT - 토근 발행
-* JWT - 토큰 검증
+* JWS - 토근 발행
+* JWS - 토큰 검증
 
 기능 요약
 - 비대칭키 KeyPair 생성
