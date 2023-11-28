@@ -2,12 +2,16 @@ package com.example.demo.controller;
 
 import com.example.demo.util.ByteUtil;
 import com.example.demo.config.RsaKeyGenerator;
+import com.example.demo.util.JsonUtil;
+import io.swagger.annotations.Api;
+import io.swagger.v3.oas.annotations.Operation;
 import org.bitcoinj.core.Base58;
+import org.springframework.boot.configurationprocessor.json.JSONException;
+import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.FileCopyUtils;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -18,12 +22,15 @@ import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
+@Api(tags = RestController.TAG)
 @org.springframework.web.bind.annotation.RestController
 public class RestController {
 
+	public static final String TAG = "JWS Manager API";
 	RsaKeyGenerator rsaKeyGenerator = new RsaKeyGenerator("C:/git-personal/demo/files/", "RSA", 2048);
 
 	/**
@@ -37,34 +44,63 @@ public class RestController {
 	 * @throws InvalidKeySpecException
 	 * @throws BadPaddingException
 	 * @throws InvalidKeyException
+	 * @throws JSONException
 	 */
-	@PostMapping("createJws")
-	public String createJws(@RequestBody String claim) throws IOException, NoSuchPaddingException,
+	@PostMapping("createReqMsg")
+	@Operation(summary = "1. 토큰과 함께 요청문 발행")
+	public String createReqMsg(@RequestBody String claim) throws IOException, NoSuchPaddingException,
 			IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException,
-			InvalidKeyException {
+			InvalidKeyException, JSONException {
 
 		String header = "";
 		String payload = "";
 		String signature = "";
 
-		// Base58 로 암호화 - 위변조 방지
-		byte[] byteData = ByteUtil.stringToBytes(claim);
-		header = Base58.encode(byteData);
-		System.out.println("header = " + header);
+		JSONObject jsonObject = new JSONObject();
+		MessageDigest digest = MessageDigest.getInstance("SHA-256");
 
-		// 서명 - 부인방지
-		signature = rsaKeyGenerator.encryptPrvRSA(header);
+		jsonObject.put("type", "JWS");
+		jsonObject.put("alg", "SHA256");
+		jsonObject.put("credentialSubject", new JSONObject(claim));
+
+		// Header
+//		byte[] byteData = ByteUtil.stringToBytes(claim);
+//		header = Base58.encode(byteData);
+//		System.out.println("header = " + header);
+
+		// Payload
+		byte[] byteData = ByteUtil.stringToBytes(jsonObject.get("credentialSubject").toString());
+		byte[] hashData = digest.digest(byteData);
+		// 바이트를 16진수 문자열로 변환
+		StringBuilder hexString = new StringBuilder();
+		for (byte b : hashData) {
+			String hex = Integer.toHexString(0xff & b);
+			if (hex.length() == 1) {
+				hexString.append('0');
+			}
+			hexString.append(hex);
+		}
+
+		byte[] byteHexData = ByteUtil.stringToBytes(hexString.toString());
+		payload = Base58.encode(byteHexData);
+		System.out.println("payload = " + payload);
+
+		// Signature
+		signature = rsaKeyGenerator.encryptPrvRSA(payload);
 		System.out.println("signature = " + signature);
 
 
 		String jws = header + "." + payload + "." + signature;
 		System.out.println("jws = " + jws);
-		return jws;
+
+		jsonObject.put("jws", jws);
+
+		return JsonUtil.toPrettyString(jsonObject.toString());
 	}
 
 	/**
 	 * JWS 토큰 검증
-	 * @param jws
+	 * @param reqMsg
 	 * @return
 	 * @throws NoSuchPaddingException
 	 * @throws IllegalBlockSizeException
@@ -73,16 +109,35 @@ public class RestController {
 	 * @throws IOException
 	 * @throws BadPaddingException
 	 * @throws InvalidKeyException
+	 * @throws JSONException
 	 */
-	@PostMapping("verifyJws")
-	public ResponseEntity<Object> verifyJws(@RequestBody String jws) throws NoSuchPaddingException, IllegalBlockSizeException,
-			NoSuchAlgorithmException, InvalidKeySpecException, IOException, BadPaddingException, InvalidKeyException {
+	@PostMapping("verifyReqMsg")
+	@Operation(summary = "2. 토큰을 통해 요청문 검증")
+	public ResponseEntity<Object> verifyReqMsg(@RequestBody String reqMsg) throws NoSuchPaddingException, IllegalBlockSizeException,
+			NoSuchAlgorithmException, InvalidKeySpecException, IOException, BadPaddingException, InvalidKeyException, JSONException {
 
 		String header = "";
 		String payload = "";
 		String signature = "";
 
-		String[] splitArray = jws.split("\\.");
+		JSONObject jsonObject = new JSONObject(reqMsg);
+		MessageDigest digest = MessageDigest.getInstance("SHA-256");
+
+		byte[] byteData = ByteUtil.stringToBytes(jsonObject.get("credentialSubject").toString());
+		byte[] hashData = digest.digest(byteData);
+		// 바이트를 16진수 문자열로 변환
+		StringBuilder hexString = new StringBuilder();
+		for (byte b : hashData) {
+			String hex = Integer.toHexString(0xff & b);
+			if (hex.length() == 1) {
+				hexString.append('0');
+			}
+			hexString.append(hex);
+		}
+
+		byte[] byteHexData = ByteUtil.stringToBytes(hexString.toString());
+
+		String[] splitArray = jsonObject.getString("jws").split("\\.");
 
 		for (int i = 0; i < splitArray.length; i++) {
 			if (i == 0) {
@@ -94,14 +149,12 @@ public class RestController {
 			}
 		}
 
-		byte[] headerByteData = Base58.decode(header);
-		header = ByteUtil.bytesToString(headerByteData);
-
+		// Signature
 		signature = rsaKeyGenerator.decryptPubRSA(signature);
-		byte[] signatureByteData = Base58.decode(signature);
-		signature = ByteUtil.bytesToString(signatureByteData);
+		byte[] signatureHashData = Base58.decode(signature);
 
-		if(header.equals(signature)){
+		// 해시 검증을 통해 위변조 검증
+		if(byteHexData.equals(signatureHashData)){
 			String successMessage = "검증 성공하였습니다.";
 			return new ResponseEntity<>(successMessage, HttpStatus.OK);
 		} else {
@@ -110,6 +163,9 @@ public class RestController {
 		}
 	}
 
+
+//========================================================================================================
+
 	/**
 	 * PK base58 암/복호화
 	 * @return
@@ -117,7 +173,7 @@ public class RestController {
 	 * @throws NoSuchAlgorithmException
 	 * @throws InvalidKeySpecException
 	 */
-	@GetMapping("base58/key")
+//	@GetMapping("base58/key")
 	public String base58() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
 		System.out.println("value = " + ByteUtil.objectToBytes(rsaKeyGenerator.getPublicKey()));
 
