@@ -6,8 +6,8 @@ JWT(Json Web Token)
 
 기능 요약
 - 비대칭키 KeyPair 생성
-- Base64 암/복호화
+- SHA-256 해시알고리즘 
   - 위변조 검증
 - RSA 알고리즘을 통한 서명
   - 부인방지
-
+  
