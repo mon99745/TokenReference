@@ -45,7 +45,7 @@ class RestControllerTest {
 			"NckiF8r/+du7gBjbRjZiN+I1W2OMSV5XGu5FvjWQ9JnzCjjNPs35PJtoXaJcblNBbzmLrA==";
 
 	/**
-	 * JWT
+	 * JWS
 	 */
 	private static String jws = "5wX24gGwoapzavxLxduxLckpH5Wx1BLrdgoebHf9FJRQrYQ1QVCXGzm9w6tLfPgeWQcqEFEmqCj4Jsv6" +
 			"g..aLJON4wPZ+79ePLBe6CIDT5KPsIEVeTKvhAstUJLE9YrBEBL+4/4ZKehZJwvGZWuxjnaugQ05w09pvmUrlL0MM9COB1IiMT2I" +
@@ -53,25 +53,42 @@ class RestControllerTest {
 			"ClTHDe/jZXmtGDei/kcDA4Ofw3jN/539LyrnEvJ+leSNFtTi+xY0+7aL5zZxz+e4iIET9T2z5Z5NckiF8r/+du7gBjbRjZiN+I1W" +
 			"2OMSV5XGu5FvjWQ9JnzCjjNPs35PJtoXaJcblNBbzmLrA==";
 
+	/**
+	 * JWS 가 발급된 요청문
+	 */
+	private static String reqMsg = "{\n" +
+			"  \"type\" : \"JWS\",\n" +
+			"  \"alg\" : \"SHA256\",\n" +
+			"  \"credentialSubject\" : {\n" +
+			"    \"uniqueId\" : \"1000\",\n" +
+			"    \"name\" : \"test\",\n" +
+			"    \"num\" : \"10\"\n" +
+			"  },\n" +
+			"  \"jws\" : \"wtEhRDrZpioF.21E9dprAihkVeVS4xzvqfQWDK3buWkrDuCJr4CJ5cgmUnAsiEiR3H7ren4e6Vk6rg8XVJmHpx8" +
+			"rGvq4mC2Y6fbmM.NEtFtzo9PaquV0eUlhsLPZvJSlY4ugSMsZglGQO3ft2nbmclHi2kuY3g8TU0pm8bk/VAa7HmTP2kyMKCsFCKpc" +
+			"UNt/UaktyA+6cFrTXLrpSYSdI/r9wuZ27tohVHeUJQhwbLWMbFBxyn94ktmsAWNwUez7tDmYDMzASIctsY/QKHNj4AYCkGS7UjV3B" +
+			"cjDPMMxuP30AeeYTMztFER8XeK//B51vGopb9yy9NmSbQz7j70FTMLNHq+z5z9/TWZTMI9NNgRR6V/r0HPTyfznHHF52ZO6/N1rvn" +
+			"ateDwWF8j5xXj9Mbby3ECM3BI6q954K0ZKli93HuPq/eFExUoYUQJw==\"\n" +
+			"}";
 	@Autowired
 	private MockMvc mvc;
 
 	@Test
-	void A_createJws() throws Exception {
-		mvc.perform(post("/createJws")
+	void A_createReqMsg() throws Exception {
+		mvc.perform(post("/createReqMsg")
 						.content(claim)
 						.session(SESSION))
 				.andDo(print())
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$").isNotEmpty())
-				.andDo(r -> jws = r.getResponse().getContentAsString());
+				.andDo(r -> reqMsg = r.getResponse().getContentAsString());
 
 	}
 
 	@Test
 	void B_verifyJws() throws Exception {
 		mvc.perform(post("/verifyJws")
-						.content(jws)
+						.content(reqMsg)
 						.session(SESSION))
 				.andDo(print())
 				.andExpect(status().isOk())
