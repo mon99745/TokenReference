@@ -25,6 +25,7 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
 
 @Api(tags = RestController.TAG)
 @org.springframework.web.bind.annotation.RestController
@@ -64,13 +65,15 @@ public class RestController {
 		jsonObject.put("credentialSubject", new JSONObject(claim));
 
 		// Header
-//		byte[] byteData = ByteUtil.stringToBytes(claim);
-//		header = Base58.encode(byteData);
-//		System.out.println("header = " + header);
+		byte[] byteHeaderData = ByteUtil.stringToBytes(
+				jsonObject.get("type").toString() + jsonObject.get("alg").toString());
+		header = Base58.encode(byteHeaderData);
+		System.out.println("header = " + header);
 
 		// Payload
-		byte[] byteData = ByteUtil.stringToBytes(jsonObject.get("credentialSubject").toString());
-		byte[] hashData = digest.digest(byteData);
+		byte[] bytePayloadData = ByteUtil.stringToBytes(jsonObject.get("credentialSubject").toString());
+		byte[] hashData = digest.digest(bytePayloadData);
+
 		// 바이트를 16진수 문자열로 변환
 		StringBuilder hexString = new StringBuilder();
 		for (byte b : hashData) {
@@ -81,8 +84,8 @@ public class RestController {
 			hexString.append(hex);
 		}
 
-		byte[] byteHexData = ByteUtil.stringToBytes(hexString.toString());
-		payload = Base58.encode(byteHexData);
+		byte[] claimHexData = ByteUtil.stringToBytes(hexString.toString());
+		payload = Base58.encode(claimHexData);
 		System.out.println("payload = " + payload);
 
 		// Signature
@@ -125,6 +128,7 @@ public class RestController {
 
 		byte[] byteData = ByteUtil.stringToBytes(jsonObject.get("credentialSubject").toString());
 		byte[] hashData = digest.digest(byteData);
+
 		// 바이트를 16진수 문자열로 변환
 		StringBuilder hexString = new StringBuilder();
 		for (byte b : hashData) {
@@ -135,10 +139,9 @@ public class RestController {
 			hexString.append(hex);
 		}
 
-		byte[] byteHexData = ByteUtil.stringToBytes(hexString.toString());
+		byte[] claimHexData = ByteUtil.stringToBytes(hexString.toString());
 
 		String[] splitArray = jsonObject.getString("jws").split("\\.");
-
 		for (int i = 0; i < splitArray.length; i++) {
 			if (i == 0) {
 				header = splitArray[i];
@@ -151,10 +154,10 @@ public class RestController {
 
 		// Signature
 		signature = rsaKeyGenerator.decryptPubRSA(signature);
-		byte[] signatureHashData = Base58.decode(signature);
+		byte[] signatureHexData = Base58.decode(signature);
 
 		// 해시 검증을 통해 위변조 검증
-		if(byteHexData.equals(signatureHashData)){
+		if(Arrays.equals(claimHexData,signatureHexData)){
 			String successMessage = "검증 성공하였습니다.";
 			return new ResponseEntity<>(successMessage, HttpStatus.OK);
 		} else {
