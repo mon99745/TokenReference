@@ -1,6 +1,6 @@
 server:
 ### ?? WAS ??
-  port: 8000
+  port: 8080
 
 keyPair:
   path: C:/git-personal/demo/files/

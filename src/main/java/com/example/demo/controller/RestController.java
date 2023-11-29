@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.config.VerifyProperties;
 import com.example.demo.util.ByteUtil;
 import com.example.demo.config.RsaKeyGenerator;
 import com.example.demo.util.JsonUtil;
@@ -32,8 +33,14 @@ import java.util.Arrays;
 public class RestController {
 
 	public static final String TAG = "JWS Manager API";
-	RsaKeyGenerator rsaKeyGenerator = new RsaKeyGenerator("C:/git-personal/demo/files/", "RSA", 2048);
+	protected final VerifyProperties verifyProperties;
+	protected final RsaKeyGenerator rsaKeyGenerator;
 
+	public RestController(VerifyProperties verifyProperties) {
+		this.verifyProperties = verifyProperties;
+		this.rsaKeyGenerator = new RsaKeyGenerator(verifyProperties);
+	}
+	
 	/**
 	 * JWS 토큰 발행
 	 * @param claim
