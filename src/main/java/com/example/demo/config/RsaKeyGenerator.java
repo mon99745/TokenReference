@@ -3,10 +3,10 @@ package com.example.demo.config;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
-import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -17,6 +17,9 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -24,12 +27,15 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.bitcoinj.core.Base58;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Getter
 @Component
 @Configuration
@@ -77,7 +83,9 @@ public class RsaKeyGenerator implements InitializingBean {
 		KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(verifyProperties.algorithm);
 		keyPairGenerator.initialize(verifyProperties.keySize);
 		KeyPair keyPair = keyPairGenerator.genKeyPair();
-		Key[] keys = new Key[] { keyPair.getPublic(), keyPair.getPrivate() };
+		Map<String, String> keys = new LinkedHashMap<>();
+		keys.put("PublicKey",Base58.encode(keyPair.getPublic().getEncoded()));
+		keys.put("PrivateKey",Base58.encode(keyPair.getPrivate().getEncoded()));
 		FileOutputStream fos = null;
 		try {
 			File folder = new File(verifyProperties.path);
@@ -88,16 +96,18 @@ public class RsaKeyGenerator implements InitializingBean {
 			for (File f : files) {
 				f.delete();
 			}
-			for (Key key : keys) {
+			for (Map.Entry<String, String> entry : keys.entrySet()) {
 				String path = null;
-				if (key.equals(keyPair.getPublic())) {
+				if (entry.getKey().equals("PublicKey")) {
 					path = verifyProperties.path + "public.pem";
-				} else {
+				} else if (entry.getKey().equals("PrivateKey")){
 					path = verifyProperties.path + "private.pem";
+				} else {
+					log.info("Key is not found in the key box");
 				}
 				File file = new File(path);
 				fos = new FileOutputStream(file);
-				fos.write(key.getEncoded());
+				fos.write(entry.getValue().getBytes());
 				LOGGER.info("RSA 키를 새로 생성하였습니다.");
 			}
 		} catch (IOException e) {
@@ -111,6 +121,30 @@ public class RsaKeyGenerator implements InitializingBean {
 	}
 
 	/**
+	 * 키 페어 생성하는 메소드
+	 */
+	public Map<String, Object> createKey(){
+		Map<String, Object> Map = new HashMap<>();
+		try {
+			// RSA 키페어 생성을 위한 KeyPairGenerator 인스턴스 생성
+			KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(verifyProperties.algorithm);
+
+			// 키페어 생성 시 사용할 키파라미터 설정 (여기서는 기본값 사용)
+			keyPairGenerator.initialize(verifyProperties.keySize); // 키파라미터에 따라 키크기가 다를 수 있습니다.
+
+			// 키페어 생성
+			KeyPair keyPair = keyPairGenerator.generateKeyPair();
+
+			// 생성된 공개키와 개인키 출력
+			Map.put("PublicKey", keyPair.getPublic());
+			Map.put("PrivateKey", keyPair.getPrivate());
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+		return Map;
+	}
+
+	/**
 	 * 키 파일을 읽어 리턴하는 메소드, 없을 경우 새로 생성
 	 */
 	public PrivateKey getPrivateKey() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
@@ -118,6 +152,7 @@ public class RsaKeyGenerator implements InitializingBean {
 			createKeyFile();
 		}
 		byte[] bytes = Files.readAllBytes(Paths.get(verifyProperties.path + "private.pem"));
+		bytes = Base58.decode(new String(bytes, StandardCharsets.UTF_8));
 		PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(bytes);
 		KeyFactory keyFactory = KeyFactory.getInstance(verifyProperties.algorithm);
 		PrivateKey pk = keyFactory.generatePrivate(spec);
@@ -132,6 +167,7 @@ public class RsaKeyGenerator implements InitializingBean {
 			createKeyFile();
 		}
 		byte[] bytes = Files.readAllBytes(Paths.get(verifyProperties.path + "public.pem"));
+		bytes = Base58.decode(new String(bytes, StandardCharsets.UTF_8));
 		X509EncodedKeySpec spec = new X509EncodedKeySpec(bytes);
 		KeyFactory keyFactory = KeyFactory.getInstance(verifyProperties.algorithm);
 		PublicKey pk = keyFactory.generatePublic(spec);

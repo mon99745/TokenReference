@@ -13,6 +13,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.FileCopyUtils;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -25,8 +26,12 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 @Api(tags = RestController.TAG)
 @org.springframework.web.bind.annotation.RestController
@@ -40,7 +45,22 @@ public class RestController {
 		this.verifyProperties = verifyProperties;
 		this.rsaKeyGenerator = new RsaKeyGenerator(verifyProperties);
 	}
-	
+
+	@GetMapping("getKeyPair")
+	@Operation(summary = "0. 키 페어 생성")
+	public Map<String, Object> getKeyPair(){
+		Map<String, Object> map = new HashMap<>();
+		PublicKey publicKey = (PublicKey) rsaKeyGenerator.createKey().get("PublicKey");
+		PrivateKey privateKey = (PrivateKey) rsaKeyGenerator.createKey().get("PrivateKey");
+
+		String strPublicKey = Base58.encode(publicKey.getEncoded());
+		String strPrivateKey = Base58.encode(privateKey.getEncoded());
+
+		map.put("publicKey-base58", strPublicKey);
+		map.put("privateKey-base58", strPrivateKey);
+		return map;
+	}
+
 	/**
 	 * JWS 토큰 발행
 	 * @param claim
@@ -98,7 +118,6 @@ public class RestController {
 		// Signature
 		signature = rsaKeyGenerator.encryptPrvRSA(payload);
 		System.out.println("signature = " + signature);
-
 
 		String jws = header + "." + payload + "." + signature;
 		System.out.println("jws = " + jws);
