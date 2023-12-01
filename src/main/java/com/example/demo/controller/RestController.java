@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.config.VerifyProperties;
+import com.example.demo.model.Request;
 import com.example.demo.util.ByteUtil;
 import com.example.demo.config.RsaKeyGenerator;
 import com.example.demo.util.JsonUtil;
@@ -46,12 +47,14 @@ public class RestController {
 		this.rsaKeyGenerator = new RsaKeyGenerator(verifyProperties);
 	}
 
-	@GetMapping("getKeyPair")
-	@Operation(summary = "0. 키 페어 생성")
-	public Map<String, Object> getKeyPair(){
+	@GetMapping("createKeyPair")
+	@Operation(summary = "키 페어 생성")
+	public Map<String, Object> createKeyPair(){
+		Map<String, Object> keyMap = rsaKeyGenerator.createKey();
 		Map<String, Object> map = new HashMap<>();
-		PublicKey publicKey = (PublicKey) rsaKeyGenerator.createKey().get("PublicKey");
-		PrivateKey privateKey = (PrivateKey) rsaKeyGenerator.createKey().get("PrivateKey");
+
+		PublicKey publicKey = (PublicKey) keyMap.get("PublicKey");
+		PrivateKey privateKey = (PrivateKey) keyMap.get("PrivateKey");
 
 		String strPublicKey = Base58.encode(publicKey.getEncoded());
 		String strPrivateKey = Base58.encode(privateKey.getEncoded());
@@ -76,7 +79,7 @@ public class RestController {
 	 */
 	@PostMapping("createReqMsg")
 	@Operation(summary = "1. 토큰과 함께 요청문 발행")
-	public String createReqMsg(@RequestBody String claim) throws IOException, NoSuchPaddingException,
+	public String createReqMsg(Request keyPair, @RequestBody String claim) throws IOException, NoSuchPaddingException,
 			IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException,
 			InvalidKeyException, JSONException {
 
@@ -84,13 +87,18 @@ public class RestController {
 		String payload = "";
 		String signature = "";
 
+		if(keyPair.getPublicKey() == null || keyPair.getPrivateKey() == null) {
+			keyPair.setPublicKey(Base58.encode(rsaKeyGenerator.getPublicKey().getEncoded()));
+			keyPair.setPrivateKey(Base58.encode(rsaKeyGenerator.getPrivateKey().getEncoded()));
+		}
+
 		JSONObject jsonObject = new JSONObject();
 		MessageDigest digest = MessageDigest.getInstance("SHA-256");
 
 		jsonObject.put("type", "JWS");
 		jsonObject.put("alg", "SHA256");
 		jsonObject.put("credentialSubject", new JSONObject(claim));
-
+		jsonObject.put("publicKey", keyPair.getPublicKey());
 		// Header
 		byte[] byteHeaderData = ByteUtil.stringToBytes(
 				jsonObject.get("type").toString() + jsonObject.get("alg").toString());
@@ -116,7 +124,7 @@ public class RestController {
 		System.out.println("payload = " + payload);
 
 		// Signature
-		signature = rsaKeyGenerator.encryptPrvRSA(payload);
+		signature = rsaKeyGenerator.encryptPrvRSA(payload, keyPair.getPrivateKey());
 		System.out.println("signature = " + signature);
 
 		String jws = header + "." + payload + "." + signature;
@@ -179,7 +187,9 @@ public class RestController {
 		}
 
 		// Signature
-		signature = rsaKeyGenerator.decryptPubRSA(signature);
+		String publickey = jsonObject.getString("publicKey");
+//		signature = rsaKeyGenerator.decryptPubRSA(signature);
+		signature = rsaKeyGenerator.decryptPubRSA(signature, publickey);
 		byte[] signatureHexData = Base58.decode(signature);
 
 		// 해시 검증을 통해 위변조 검증

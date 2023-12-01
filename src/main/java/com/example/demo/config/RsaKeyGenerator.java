@@ -133,7 +133,7 @@ public class RsaKeyGenerator implements InitializingBean {
 			keyPairGenerator.initialize(verifyProperties.keySize); // 키파라미터에 따라 키크기가 다를 수 있습니다.
 
 			// 키페어 생성
-			KeyPair keyPair = keyPairGenerator.generateKeyPair();
+			KeyPair keyPair = keyPairGenerator.genKeyPair();
 
 			// 생성된 공개키와 개인키 출력
 			Map.put("PublicKey", keyPair.getPublic());
@@ -144,8 +144,33 @@ public class RsaKeyGenerator implements InitializingBean {
 		return Map;
 	}
 
+
 	/**
-	 * 키 파일을 읽어 리턴하는 메소드, 없을 경우 새로 생성
+	 * 키를 받아 복호화헤서 리턴하는 메소드
+	 */
+	public PrivateKey getPrivateKey(String privateKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
+
+		byte[] bytes = Base58.decode(privateKey);
+		PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(bytes);
+		KeyFactory keyFactory = KeyFactory.getInstance(verifyProperties.algorithm);
+		PrivateKey pk = keyFactory.generatePrivate(spec);
+		return pk;
+	}
+
+	/**
+	 * 키를 받아 복호화헤서 리턴하는 메소드
+	 */
+	public PublicKey getPublicKey(String publicKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
+
+		byte[] bytes = Base58.decode(publicKey);
+		X509EncodedKeySpec spec = new X509EncodedKeySpec(bytes);
+		KeyFactory keyFactory = KeyFactory.getInstance(verifyProperties.algorithm);
+		PublicKey pk = keyFactory.generatePublic(spec);
+		return pk;
+	}
+
+	/**
+	 * 키 파일을 읽어 리턴하는 메소드, 없을 경우 새로 생성 (for serverKey)
 	 */
 	public PrivateKey getPrivateKey() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
 		if (!keyFileCheck()) {
@@ -160,7 +185,7 @@ public class RsaKeyGenerator implements InitializingBean {
 	}
 
 	/**
-	 * 키 파일을 읽어 리턴하는 메소드, 없을 경우 새로 생성
+	 * 키 파일을 읽어 리턴하는 메소드, 없을 경우 새로 생성 (for serverKey)
 	 */
 	public PublicKey getPublicKey() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
 		if (!keyFileCheck()) {
@@ -223,6 +248,35 @@ public class RsaKeyGenerator implements InitializingBean {
 		Cipher cipher2 = Cipher.getInstance("RSA");
 		byte[] byteEncrypted = Base64.getDecoder().decode(encrypted.getBytes());
 		cipher2.init(Cipher.DECRYPT_MODE, publicKey);
+		byte[] bytePlain = cipher2.doFinal(byteEncrypted);
+		String decrypted = new String(bytePlain, "utf-8");
+		return decrypted;
+	}
+
+	/**
+	 * private 키로 암호화
+	 */
+	public String encryptPrvRSA(String plainText, String privateKey) throws NoSuchAlgorithmException, InvalidKeySpecException,
+			InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+
+		PrivateKey pk = getPrivateKey(privateKey);
+		Cipher cipher = Cipher.getInstance("RSA");
+		cipher.init(Cipher.ENCRYPT_MODE, pk);
+		byte[] bytePlain = cipher.doFinal(plainText.getBytes());
+		String encrypted = Base64.getEncoder().encodeToString(bytePlain);
+		return encrypted;
+	}
+
+	/**
+	 * public 키로 복호화
+	 */
+	public String decryptPubRSA(String encrypted, String publicKey) throws NoSuchAlgorithmException, InvalidKeySpecException,
+			IOException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException{
+
+		PublicKey pk = getPublicKey(publicKey);
+		Cipher cipher2 = Cipher.getInstance("RSA");
+		byte[] byteEncrypted = Base64.getDecoder().decode(encrypted.getBytes());
+		cipher2.init(Cipher.DECRYPT_MODE, pk);
 		byte[] bytePlain = cipher2.doFinal(byteEncrypted);
 		String decrypted = new String(bytePlain, "utf-8");
 		return decrypted;
