@@ -8,8 +8,8 @@ import com.example.demo.util.JsonUtil;
 import io.swagger.annotations.Api;
 import io.swagger.v3.oas.annotations.Operation;
 import org.bitcoinj.core.Base58;
-import org.springframework.boot.configurationprocessor.json.JSONException;
-import org.springframework.boot.configurationprocessor.json.JSONObject;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +17,7 @@ import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -34,15 +35,15 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-@Api(tags = RestController.TAG)
-@org.springframework.web.bind.annotation.RestController
-public class RestController {
+@Api(tags = JwsRestController.TAG)
+@RestController
+public class JwsRestController {
 
 	public static final String TAG = "JWS Manager API";
 	protected final VerifyProperties verifyProperties;
 	protected final RsaKeyGenerator rsaKeyGenerator;
 
-	public RestController(VerifyProperties verifyProperties) {
+	public JwsRestController(VerifyProperties verifyProperties) {
 		this.verifyProperties = verifyProperties;
 		this.rsaKeyGenerator = new RsaKeyGenerator(verifyProperties);
 	}
@@ -51,7 +52,7 @@ public class RestController {
 	@Operation(summary = "키 페어 생성")
 	public Map<String, Object> createKeyPair(){
 		Map<String, Object> keyMap = rsaKeyGenerator.createKey();
-		Map<String, Object> map = new HashMap<>();
+		Map<String, Object> strKeymap = new HashMap<>();
 
 		PublicKey publicKey = (PublicKey) keyMap.get("PublicKey");
 		PrivateKey privateKey = (PrivateKey) keyMap.get("PrivateKey");
@@ -59,9 +60,9 @@ public class RestController {
 		String strPublicKey = Base58.encode(publicKey.getEncoded());
 		String strPrivateKey = Base58.encode(privateKey.getEncoded());
 
-		map.put("publicKey-base58", strPublicKey);
-		map.put("privateKey-base58", strPrivateKey);
-		return map;
+		strKeymap.put("publicKey", strPublicKey);
+		strKeymap.put("privateKey", strPrivateKey);
+		return strKeymap;
 	}
 
 	/**
