@@ -1,8 +1,7 @@
-package com.security.jsonwebtoken.common;
+package com.security.jsonwebtoken.config;
 
 import com.security.jsonwebtoken.controller.TokenRestController;
 import com.security.jsonwebtoken.controller.KeyPairRestController;
-import com.security.jsonwebtoken.controller.SignDocRestController;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

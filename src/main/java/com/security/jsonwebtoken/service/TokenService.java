@@ -2,11 +2,11 @@ package com.security.jsonwebtoken.service;
 
 import com.security.jsonwebtoken.config.RsaKeyGenerator;
 import com.security.jsonwebtoken.config.VerifyProperties;
-import com.security.jsonwebtoken.message.CreateTokenResponse;
-import com.security.jsonwebtoken.message.ExtractClaimResponse;
-import com.security.jsonwebtoken.message.VerifyTokenResponse;
-import com.security.jsonwebtoken.model.Claims;
-import com.security.jsonwebtoken.model.Token;
+import com.security.jsonwebtoken.model.dto.reponse.CreateTokenResponse;
+import com.security.jsonwebtoken.model.dto.reponse.ExtractClaimResponse;
+import com.security.jsonwebtoken.model.dto.reponse.VerifyTokenResponse;
+import com.security.jsonwebtoken.model.dto.Claims;
+import com.security.jsonwebtoken.model.dto.Token;
 import com.security.jsonwebtoken.util.ByteUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.security.jsonwebtoken.util.HashUtil;
@@ -31,7 +31,7 @@ import java.util.Objects;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class TokenSerivce {
+public class TokenService {
 	protected final RsaKeyGenerator rsaKeyGenerator;
 	protected final VerifyProperties verifyProperties;
 	protected final KeyPairService keyPairService;

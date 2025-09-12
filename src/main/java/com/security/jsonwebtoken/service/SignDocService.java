@@ -2,33 +2,16 @@ package com.security.jsonwebtoken.service;
 
 import com.security.jsonwebtoken.config.RsaKeyGenerator;
 import com.security.jsonwebtoken.config.VerifyProperties;
-import com.security.jsonwebtoken.model.Token;
-import com.security.jsonwebtoken.util.ByteUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.bitcoinj.core.Base58;
-import org.json.JSONObject;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-import java.util.Arrays;
-import java.util.Objects;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class SignDocService {
 	protected final RsaKeyGenerator rsaKeyGenerator;
-	protected final TokenSerivce tokenSerivce;
+	protected final TokenService tokenService;
 	protected final VerifyProperties verifyProperties;
 
 //	TODO : createSignDocument

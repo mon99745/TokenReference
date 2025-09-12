@@ -1,9 +1,9 @@
 package com.security.jsonwebtoken.controller;
 
-import com.security.jsonwebtoken.message.CreateTokenResponse;
-import com.security.jsonwebtoken.message.ExtractClaimResponse;
-import com.security.jsonwebtoken.message.VerifyTokenResponse;
-import com.security.jsonwebtoken.service.TokenSerivce;
+import com.security.jsonwebtoken.model.dto.reponse.CreateTokenResponse;
+import com.security.jsonwebtoken.model.dto.reponse.ExtractClaimResponse;
+import com.security.jsonwebtoken.model.dto.reponse.VerifyTokenResponse;
+import com.security.jsonwebtoken.service.TokenService;
 import io.swagger.annotations.Api;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -13,9 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.Map;
 
 @Api(tags = TokenRestController.TAG)
@@ -27,7 +24,7 @@ public class TokenRestController {
 	public static final String TAG = "JWT Manager API";
 	public static final String PATH = "/api/v1";
 	private static final String JWT_FIELD_NAME = "jwt";
-	protected final TokenSerivce tokenSerivce;
+	protected final TokenService tokenService;
 
 
 	/**
@@ -41,7 +38,7 @@ public class TokenRestController {
 	public CreateTokenResponse createToken(@RequestBody Map<String, String> requestClaim) {
 		log.info("Request Claim : ", requestClaim);
 
-		return tokenSerivce.createJwt(requestClaim);
+		return tokenService.createJwt(requestClaim);
 	}
 
 	/**
@@ -55,7 +52,7 @@ public class TokenRestController {
 	public VerifyTokenResponse verifyToken(@RequestBody Map<String, String> request) {
 		log.info("Request JWT : " + request.get(JWT_FIELD_NAME));
 
-		return tokenSerivce.verifyJwt(request.get(JWT_FIELD_NAME));
+		return tokenService.verifyJwt(request.get(JWT_FIELD_NAME));
 	}
 
 	/**
@@ -69,6 +66,6 @@ public class TokenRestController {
 	public ExtractClaimResponse extractClaimToJwt(@RequestBody Map<String, String> request) {
 		log.info("Request JWT : " + request.get(JWT_FIELD_NAME));
 
-		return tokenSerivce.extractClaimToJwt(request.get(JWT_FIELD_NAME));
+		return tokenService.extractClaimToJwt(request.get(JWT_FIELD_NAME));
 	}
 }
