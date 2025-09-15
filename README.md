@@ -8,7 +8,8 @@ The ultimate goal:
 * Json Web Token 발급과 검증에 최소한의 정보를 담아 커스텀 사용성을 확장하고, 이를 용이하도록 한다.
 
 # Release
-- [v1.1.0](./RELEASENOTE.md#v100-2024-04-24-) `-ing`
+- [v1.2.0](./RELEASENOTE.md#v100-2025-09-12-) `-ing`
+- [v1.1.0](./RELEASENOTE.md#v100-2024-04-24-)
 - [v1.0.0](./RELEASENOTE.md#v100-2024-01-30-)
 
 # Process
