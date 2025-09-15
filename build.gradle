@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.security.jsonwebtoken'
-version = '1.1.0'
+version = '1.2.0'
 
 java {
 	sourceCompatibility = '1.8'
@@ -31,6 +31,7 @@ repositories {
 }
 
 dependencies {
+	// 필수적
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation group: 'org.json', name: 'json', version: '20230227'
 	implementation 'org.apache.commons:commons-lang3:3.12.0'
@@ -40,14 +41,19 @@ dependencies {
 	implementation 'com.google.code.gson:gson'
 	implementation 'com.google.guava:guava:31.1-jre'
 	implementation 'org.projectlombok:lombok'
-	implementation 'org.springframework.boot:spring-boot-devtools'
 	implementation 'org.slf4j:slf4j-api:1.7.32'
-	implementation 'io.springfox:springfox-swagger-ui:3.0.0'
-	implementation 'io.springfox:springfox-boot-starter:3.0.0'
 
-	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+	// 선택적 / 문서용 (compileOnly)
+	compileOnly 'io.springfox:springfox-swagger-ui:3.0.0'
+	compileOnly 'io.springfox:springfox-boot-starter:3.0.0'
+	compileOnly 'org.springframework.boot:spring-boot-devtools'
+
+	// 컴파일타임 시
+	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
+	// 테스트용
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'

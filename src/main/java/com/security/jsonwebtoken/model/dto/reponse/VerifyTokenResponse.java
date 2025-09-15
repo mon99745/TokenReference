@@ -1,4 +1,4 @@
-package com.security.jsonwebtoken.message;
+package com.security.jsonwebtoken.model.dto.reponse;
 
 import lombok.Builder;
 import lombok.Getter;

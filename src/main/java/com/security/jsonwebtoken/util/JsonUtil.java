@@ -1,6 +1,5 @@
 package com.security.jsonwebtoken.util;
 
-import com.security.jsonwebtoken.exception.CommonException;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -20,6 +19,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import com.security.jsonwebtoken.common.exception.CommonException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;

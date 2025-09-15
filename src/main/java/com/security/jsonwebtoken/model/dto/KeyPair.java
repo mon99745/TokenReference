@@ -1,4 +1,4 @@
-package com.security.jsonwebtoken.model;
+package com.security.jsonwebtoken.model.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
