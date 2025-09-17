@@ -1,0 +1,17 @@
+package com.jsonwebtoken.app.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class IndexController {
+	@GetMapping("/")
+	public String rootRedirect() {
+		return "redirect:/api";
+	}
+
+	@GetMapping("/api")
+	public String apiRedirect() {
+		return "redirect:/swagger-ui/index.html";
+	}
+}

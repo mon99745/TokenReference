@@ -1,93 +1,53 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '2.5.6'
+	id 'org.springframework.boot'
 	id 'io.spring.dependency-management' version '1.1.2'
 }
 
-group = 'com.security.jsonwebtoken'
-version = '1.2.0'
-
-def excludedPackages = ['**/SwaggerConfig.*']
-
-java {
-	sourceCompatibility = '1.8'
-}
-
-jar {
-	enabled = true
-	archiveClassifier = ''
-	exclude excludedPackages
-}
-
-bootJar {
-	enabled = false
-}
-
-configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
+allprojects {
+	group = 'com.jsonwebtoken'
+	version = '1.2.0'
+	java {
+		sourceCompatibility = '1.8'
 	}
 }
 
-repositories {
-	mavenCentral()
-}
+subprojects {
+	apply plugin: 'java'
+	apply plugin: 'org.springframework.boot'
+	apply plugin: 'io.spring.dependency-management'
 
-dependencies {
-	// 필수적
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation group: 'org.json', name: 'json', version: '20230227'
-	implementation 'org.apache.commons:commons-lang3:3.12.0'
-	implementation 'org.bitcoinj:bitcoinj-core:0.15.10'
-	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
-	implementation 'com.github.wnameless.json:json-flattener:0.16.0'
-	implementation 'com.google.code.gson:gson'
-	implementation 'com.google.guava:guava:31.1-jre'
-	implementation 'org.projectlombok:lombok'
-	implementation 'org.slf4j:slf4j-api:1.7.32'
-
-	// 선택적 / 문서용 (compileOnly)
-	compileOnly 'io.springfox:springfox-swagger-ui:3.0.0'
-	compileOnly 'io.springfox:springfox-boot-starter:3.0.0'
-	compileOnly 'org.springframework.boot:spring-boot-devtools'
-
-	// 컴파일타임 시
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
-	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
-
-	// 테스트용
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
-	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-}
-
-tasks.named('test') {
-	useJUnitPlatform()
-}
-
-task sourcesJar(type: Jar) {
-	archiveClassifier.set('sources')
-	from(sourceSets.main.allSource) {
-		exclude excludedPackages
+	repositories {
+		mavenCentral()
 	}
-}
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
-	archiveClassifier.set('javadoc')
-	from(javadoc.destinationDir) {
-		exclude excludedPackages
+	dependencies {
+		// 필수적
+		implementation 'org.springframework.boot:spring-boot-starter-web'
+		implementation group: 'org.json', name: 'json', version: '20230227'
+		implementation 'org.apache.commons:commons-lang3:3.12.0'
+		implementation 'org.bitcoinj:bitcoinj-core:0.15.10'
+		implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
+		implementation 'com.github.wnameless.json:json-flattener:0.16.0'
+		implementation 'com.google.code.gson:gson'
+		implementation 'com.google.guava:guava:31.1-jre'
+		implementation 'org.projectlombok:lombok'
+		implementation 'org.slf4j:slf4j-api:1.7.32'
+
+		// 선택적 / 문서용 (compileOnly)
+		compileOnly 'org.springframework.boot:spring-boot-devtools'
+
+		// 컴파일타임 시
+		compileOnly 'org.projectlombok:lombok'
+		annotationProcessor 'org.projectlombok:lombok'
+		annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+		// 테스트용
+		testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
+		testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
+		testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	}
-}
-
-javadoc {
-	options.encoding = 'UTF-8'
-
-	// 경고 무시 옵션 추가
-	options.addStringOption('Xdoclint:none', '-quiet')
-}
-
-artifacts {
-	archives sourcesJar
-	archives javadocJar
+	test {
+		useJUnitPlatform()
+	}
 }
