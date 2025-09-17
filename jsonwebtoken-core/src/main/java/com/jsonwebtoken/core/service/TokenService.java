@@ -2,6 +2,8 @@ package com.jsonwebtoken.core.service;
 
 import com.jsonwebtoken.core.config.VerifyProperties;
 import com.jsonwebtoken.core.config.RsaKeyGenerator;
+import com.jsonwebtoken.core.exception.TokenError;
+import com.jsonwebtoken.core.exception.TokenException;
 import com.jsonwebtoken.core.model.dto.reponse.CreateTokenResponse;
 import com.jsonwebtoken.core.model.dto.reponse.ExtractClaimResponse;
 import com.jsonwebtoken.core.model.dto.reponse.VerifyTokenResponse;
@@ -21,12 +23,10 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Map;
-import java.util.Objects;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -43,7 +43,16 @@ public class TokenService {
 	 * @return CreateTokenResponse
 	 */
 	public CreateTokenResponse createJwt(Map<String, String> requestClaim) {
-		return this.createJwt(setClaims(requestClaim));
+		if (requestClaim == null || requestClaim.isEmpty()) {
+			throw new TokenException(TokenError.MISSING_CLAIM);
+		}
+		try {
+			return this.createJwt(setClaims(requestClaim));
+		} catch (IllegalArgumentException e) {
+			throw new TokenException(TokenError.INVALID_CLAIM_FORMAT, e);
+		} catch (Exception e) {
+			throw new TokenException(TokenError.JWT_CREATION_FAILED, e);
+		}
 	}
 
 	/**
@@ -53,11 +62,10 @@ public class TokenService {
 	 * @return CreateTokenResponse
 	 */
 	public CreateTokenResponse createJwt(Claims claims) {
+		if (claims == null) {
+			throw new TokenException(TokenError.MISSING_CLAIM);
+		}
 		try {
-			if (claims == null) {
-				throw new IllegalArgumentException("Claim is empty");
-			}
-
 			/** Header 생성 */
 			String header = createHeader();
 			log.info("header = {}, header byte = {}", header, header.getBytes().length);
@@ -87,21 +95,9 @@ public class TokenService {
 					.build();
 
 		} catch (IllegalArgumentException e) {
-			log.error("JWT 생성 중 예외 발생: ", e);
-			return CreateTokenResponse.builder()
-					.resultMsg("Fail: " + e.getMessage())
-					.resultCode(String.valueOf(HttpStatus.BAD_REQUEST.value()))
-					.claims(claims.getPublicClaims())
-					.build();
-		} catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException |
-				 NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException |
-				 InvalidKeyException e) {
-			log.error("JWT 생성 중 예외 발생: ", e);
-			return CreateTokenResponse.builder()
-					.resultMsg("Fail: " + e.getMessage())
-					.resultCode(String.valueOf(HttpStatus.BAD_REQUEST.value()))
-					.claims(claims.getPublicClaims())
-					.build();
+			throw new TokenException(TokenError.INVALID_CLAIM_FORMAT, e);
+		} catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+			throw new TokenException(TokenError.JWT_CREATION_FAILED, e);
 		}
 	}
 
@@ -113,11 +109,11 @@ public class TokenService {
 	 * @return VerifyTokenResponse
 	 */
 	public VerifyTokenResponse verifyJwt(String token) {
-		try {
-			if (token == null || token.isEmpty()) {
-				throw new IllegalArgumentException("JWT is empty");
-			}
+		if (token == null || token.isEmpty()) {
+			throw new TokenException(TokenError.MISSING_CLAIM);
+		}
 
+		try {
 			/** 토큰 구조 분류 */
 			Token tokenObject = parseToken(token);
 
@@ -130,50 +126,32 @@ public class TokenService {
 			String signedVerifyCode = rsaKeyGenerator.decryptPubRSA(tokenObject.getSignature(), publicKey);
 
 			/** 위변조 검증(해시 비교) */
-			if (newVerifyCode.equals(signedVerifyCode)) {
-				return VerifyTokenResponse.builder()
-						.resultMsg("Success")
-						.resultCode(String.valueOf(HttpStatus.OK.value()))
-						.jwt(token)
-						.build();
-			} else {
-				return VerifyTokenResponse.builder()
-						.resultMsg("Fail: " + "토큰이 위변조 되었습니다.")
-						.resultCode(String.valueOf(HttpStatus.BAD_REQUEST.value()))
-						.jwt(token)
-						.build();
+			if (!newVerifyCode.equals(signedVerifyCode)) {
+				throw new TokenException(TokenError.INVALID_KEY_INPUT,
+						new IllegalArgumentException("토큰이 위변조 되었습니다."));
 			}
-		} catch (IllegalArgumentException e) {
-			log.error("JWT 검증 중 예외 발생: ", e);
+
 			return VerifyTokenResponse.builder()
-					.resultMsg("Fail: " + e.getMessage())
-					.resultCode(String.valueOf(HttpStatus.BAD_REQUEST.value()))
+					.resultMsg("Success")
+					.resultCode(String.valueOf(HttpStatus.OK.value()))
 					.jwt(token)
 					.build();
+
+		} catch (IllegalArgumentException e) {
+			throw new TokenException(TokenError.INVALID_CLAIM_FORMAT, e);
 		} catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException |
 				 NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException |
 				 InvalidKeyException e) {
-			log.error("JWT 검증 중 예외 발생: ", e);
-			return VerifyTokenResponse.builder()
-					.resultMsg("Fail: " + "JWT 검증 실패 :" + e.getMessage())
-					.resultCode(String.valueOf(HttpStatus.BAD_REQUEST.value()))
-					.jwt(token)
-					.build();
+			throw new TokenException(TokenError.JWT_CREATION_FAILED, e);
 		}
 	}
 
-	/**
-	 * Json Web Token 정보 추출
-	 *
-	 * @param token 정보 추출 대상 토큰
-	 * @return ExtractClaimResponse
-	 */
 	public ExtractClaimResponse extractClaimToJwt(String token) {
-		try {
-			if (token == null || token.isEmpty()) {
-				throw new IllegalArgumentException("JWT is empty");
-			}
+		if (token == null || token.isEmpty()) {
+			throw new TokenException(TokenError.MISSING_CLAIM);
+		}
 
+		try {
 			/** 토큰 구조 분류 */
 			Token tokenObject = parseToken(token);
 
@@ -190,111 +168,130 @@ public class TokenService {
 					.claims(claims)
 					.jwt(token)
 					.build();
+
 		} catch (IllegalArgumentException e) {
-			log.error("Claim 추출 실패 : ", e);
-			return ExtractClaimResponse.builder()
-					.resultMsg("Fail: " + "Claim 추출 실패 : " + e.getMessage())
-					.resultCode(String.valueOf(HttpStatus.BAD_REQUEST.value()))
-					.build();
+			throw new TokenException(TokenError.INVALID_CLAIM_FORMAT, e);
 		} catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException |
 				 NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException |
 				 InvalidKeyException e) {
-			log.error("JWT 검증 중 예외 발생: ", e);
-			return ExtractClaimResponse.builder()
-					.resultMsg("Fail: " + "Claim 추출 실패 :" + e.getMessage())
-					.resultCode(String.valueOf(HttpStatus.BAD_REQUEST.value()))
-					.build();
+			throw new TokenException(TokenError.JWT_CREATION_FAILED, e);
 		}
 	}
 
-	public Claims setClaims(Map<String, String> requestClaim) {
-		Claims.RegisteredClaim registeredClaim = Claims.RegisteredClaim.builder()
-				.issuer("security.com") // 발급자
-				.subject("Json Web Token") // 주제
-				.expiration("2025-01-31T23:59:59Z") // 만료 시간 (ISO-8601 형식)
-				.issuedAt("2025-01-21T10:00:00Z") // 발급 시간 (ISO-8601 형식)
-				.build();
+	protected Claims setClaims(Map<String, String> requestClaim) {
+		if (requestClaim == null || requestClaim.isEmpty()) {
+			throw new TokenException(TokenError.MISSING_CLAIM);
+		}
 
-		Claims.PublicClaim publicClaim = Claims.PublicClaim.builder()
-				.publicClaim(requestClaim)
-				.build();
+		try {
+			Claims.RegisteredClaim registeredClaim = Claims.RegisteredClaim.builder()
+					.issuer("security.com") // 발급자
+					.subject("Json Web Token") // 주제
+					.expiration("2025-01-31T23:59:59Z") // 만료 시간 (ISO-8601 형식)
+					.issuedAt("2025-01-21T10:00:00Z") // 발급 시간 (ISO-8601 형식)
+					.build();
 
-		return Claims.builder()
-				.registeredClaims(registeredClaim)
-				.publicClaims(publicClaim)
-				.build();
+			Claims.PublicClaim publicClaim = Claims.PublicClaim.builder()
+					.publicClaim(requestClaim)
+					.build();
+
+			return Claims.builder()
+					.registeredClaims(registeredClaim)
+					.publicClaims(publicClaim)
+					.build();
+		} catch (Exception e) {
+			throw new TokenException(TokenError.INVALID_CLAIM_FORMAT, e);
+		}
 	}
 
-	public String createHeader() throws IOException {
+	protected String createHeader() {
 		String typ = verifyProperties.getTyp();
 		String alg = verifyProperties.getAlg();
 
-		if (Objects.isNull(typ) || typ.isEmpty()
-				|| Objects.isNull(alg) || alg.isEmpty()) {
-			throw new RuntimeException("Header Info is null or empty");
+		if (typ == null || typ.isEmpty() || alg == null || alg.isEmpty()) {
+			throw new TokenException(TokenError.MISSING_CLAIM);
 		}
 
-		// TODO: setHeader 정의 후 오버라이딩이 필요.
-		byte[] byteHeaderData = ByteUtil.stringToBytes(typ + alg);
-		String encHeader = Base58.encode(byteHeaderData);
-
-		return encHeader;
+		try {
+			byte[] byteHeaderData = ByteUtil.stringToBytes(typ + alg);
+			return Base58.encode(byteHeaderData);
+		} catch (Exception e) {
+			throw new TokenException(TokenError.BASE58_ENCODING_FAILED, e);
+		}
 	}
 
-	public String createPayload(Claims claims) throws IOException {
-		ObjectMapper objectMapper = new ObjectMapper();
-		String strClaims = objectMapper.writeValueAsString(claims);
-		byte[] bytePayloadData = ByteUtil.stringToBytes(strClaims);
-		String payload = Base58.encode(bytePayloadData);
-
-		return payload;
+	protected String createPayload(Claims claims) {
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			String strClaims = objectMapper.writeValueAsString(claims);
+			byte[] bytePayloadData = ByteUtil.stringToBytes(strClaims);
+			return Base58.encode(bytePayloadData);
+		} catch (Exception e) {
+			throw new TokenException(TokenError.BASE58_ENCODING_FAILED, e);
+		}
 	}
 
-	public String setVerifyCode(String header, String payload) {
-		return HashUtil.sha256(header + payload);
+	protected String setVerifyCode(String header, String payload) {
+		if (header == null || payload == null) {
+			throw new TokenException(TokenError.MISSING_CLAIM);
+		}
+
+		try {
+			return HashUtil.sha256(header + payload);
+		} catch (Exception e) {
+			throw new TokenException(TokenError.JWT_CREATION_FAILED, e);
+		}
 	}
 
+	protected String createSignature(String verifyCode, String privateKey) {
+		if (verifyCode == null || privateKey == null) {
+			throw new TokenException(TokenError.MISSING_CLAIM);
+		}
 
-	public String createSignature(String verifyCode, String privateKey)
-			throws NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException,
-			InvalidKeySpecException, BadPaddingException, InvalidKeyException, UnsupportedEncodingException {
-
-		return rsaKeyGenerator.encryptPrvRSA(verifyCode, privateKey);
+		try {
+			return rsaKeyGenerator.encryptPrvRSA(verifyCode, privateKey);
+		} catch (NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException |
+				 InvalidKeySpecException | BadPaddingException | InvalidKeyException e) {
+			throw new TokenException(TokenError.JWT_CREATION_FAILED, e);
+		}
 	}
 
-	public String combineToken(String header, String payload, String signature) {
+	protected String combineToken(String header, String payload, String signature) {
+		if (header == null || payload == null || signature == null) {
+			throw new TokenException(TokenError.MISSING_CLAIM);
+		}
 		return header + "." + payload + "." + signature;
 	}
 
-	private Object readClaim(String payload) {
-		ObjectMapper objectMapper = new ObjectMapper();
-		byte[] decodedBytes = Base58.decode(payload);
-		try {
-			String strClaim = ByteUtil.bytesToUtfString(decodedBytes);
-			Object json = objectMapper.readTree(strClaim);
+	protected Object readClaim(String payload) {
+		if (payload == null || payload.isEmpty()) {
+			throw new TokenException(TokenError.MISSING_CLAIM);
+		}
 
-			return json;
+		ObjectMapper objectMapper = new ObjectMapper();
+		byte[] decodedBytes;
+		try {
+			decodedBytes = Base58.decode(payload);
+			String strClaim = ByteUtil.bytesToUtfString(decodedBytes);
+			return objectMapper.readTree(strClaim);
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			throw new TokenException(TokenError.INVALID_CLAIM_FORMAT, e);
+		} catch (Exception e) {
+			throw new TokenException(TokenError.JWT_CREATION_FAILED, e);
 		}
 	}
 
-	public Token parseToken(String token) {
-		String[] splitArray = token.split("\\.");
-		String header = null;
-		String payload = null;
-		String signature = null;
-
-		for (int i = 0; i < splitArray.length; i++) {
-			if (i == 0) {
-				header = splitArray[i];
-			} else if (i == 1) {
-				payload = splitArray[i];
-			} else if (i == 2) {
-				signature = splitArray[i];
-			}
+	protected Token parseToken(String token) {
+		if (token == null || token.isEmpty()) {
+			throw new TokenException(TokenError.MISSING_CLAIM);
 		}
 
-		return new Token(header, payload, signature);
+		String[] splitArray = token.split("\\.");
+		if (splitArray.length != 3) {
+			throw new TokenException(TokenError.INVALID_CLAIM_FORMAT,
+					new IllegalArgumentException("토큰 구조가 올바르지 않습니다."));
+		}
+
+		return new Token(splitArray[0], splitArray[1], splitArray[2]);
 	}
 }
