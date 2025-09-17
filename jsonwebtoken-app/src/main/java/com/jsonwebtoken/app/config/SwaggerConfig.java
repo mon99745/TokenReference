@@ -28,7 +28,7 @@ public class SwaggerConfig {
 //						new Tag(SignDocRestController.TAG, "서명 문서(Signature Document) 관리 API", 300)
 						)
 				.select()
-				.apis(RequestHandlerSelectors.basePackage("com.security.jsonwebtoken.controller"))
+				.apis(RequestHandlerSelectors.basePackage("com.jsonwebtoken.app.controller"))
 				.build();
 	}
 
