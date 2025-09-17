@@ -1,0 +1,47 @@
+plugins {
+	id 'java'
+}
+
+jar {
+	enabled = true
+	archiveClassifier = ''
+}
+
+bootJar {
+	enabled = false
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+task sourcesJar(type: Jar) {
+	archiveClassifier.set('sources')
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+	archiveClassifier.set('javadoc')
+}
+
+javadoc {
+	options.encoding = 'UTF-8'
+	options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+artifacts {
+	archives sourcesJar
+	archives javadocJar
+}
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+}
+

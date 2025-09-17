@@ -1,0 +1,21 @@
+plugins {
+	id 'java'
+}
+jar {
+	enabled = true
+}
+
+bootJar {
+	enabled = false
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'io.springfox:springfox-swagger-ui:3.0.0'
+	implementation 'io.springfox:springfox-boot-starter:3.0.0'
+
+	implementation project(':jsonwebtoken-core')
+}

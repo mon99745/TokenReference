@@ -14,12 +14,48 @@
 - 2차 기능 개선
   1. (신규/하) [공통] 조건에 맞는 Bean을 자동으로 생성하도록 설정 추가 - 완료
   1. (개선/하) [공통] 디렉터리 구조 재설정 - 완료
-  1. (개선/하) [공통] Gradle에서 의존성 범위(scope) 조정 - 완료
+  1. (개선/하) [공통] Gradle에서 의존성 범위(scope) 조정 - 완료 
   1. (개선/하) [공통] 공통 예외처리 적용 - 완료
+  ```
+  - CommonError.java
+  - CommonException.java
+  - CommonExceptionHandler.java
+  - DefaultException.java
+  ```
   1. (신규/하) [공통] 예외처리 수정 및 보강 - 완료
   1. (개선/하) [공통] 빌드 버전 변경 - 완료
   1. (신규/중) [발행/검증] createSignDocument 기능 재구현 - 보류
   1. (개선/하) [발행/검증] Service layer 주석 구체화 - 보류
+  1. (개선/중) [공통] 애플리케이션 모듈, 라이브러리 모듈 분리 - 완료
+  ```
+    > 1. 핵심 모듈(Core) : 공통으로 사용하는 모듈
+    > 2. 애플리케이션 모듈(App) : 실제 서비스에 적용하는 모듈
+  
+  JsonWebToken/
+  ├─ settings.gradle
+  ├─ build.gradle
+  ├─ JsonWebToken-core/
+  │   ├─ build.gradle
+  │   └─ src/main/java/com/jsonwebtoken/core/
+  │       ├─ config/
+  │       │   ...
+  │       ├─ service/
+  │       │   ...
+  │       ├─ properties/
+  │       │   ...
+  │       └─ util/
+  │           ...
+  │       ...
+  └─ JsonWebToken-app/
+  ├─ build.gradle
+  └─ src/main/java/com/jsonwebtoken/app/
+  ├─ config/
+  │   ...
+  ├─ controller/
+  │   ...
+  ├─ Application.java
+  └─ ...
+  ```
 
   
 ## v1.1.0 (2024-04-24 ~)
