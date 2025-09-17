@@ -1,4 +1,4 @@
-package com.jsonwebtoken.core.common.exception;
+package com.jsonwebtoken.core.exception.common;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

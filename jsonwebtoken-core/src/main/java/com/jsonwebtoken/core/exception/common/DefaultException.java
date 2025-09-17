@@ -1,8 +1,8 @@
-package com.jsonwebtoken.core.common.exception;
+package com.jsonwebtoken.core.exception.common;
 
 
-import com.jsonwebtoken.core.common.util.ExceptionUtil;
-import com.jsonwebtoken.core.common.util.StringUtil;
+import com.jsonwebtoken.core.util.ExceptionUtil;
+import com.jsonwebtoken.core.util.StringUtil;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 

@@ -1,4 +1,4 @@
-package com.jsonwebtoken.core.common.exception;
+package com.jsonwebtoken.core.exception.common;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
