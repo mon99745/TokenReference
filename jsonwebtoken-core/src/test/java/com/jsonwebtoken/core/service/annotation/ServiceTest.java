@@ -1,4 +1,4 @@
-package com.security.jsonwebtoken.annotation;
+package com.jsonwebtoken.core.service.annotation;
 
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestMethodOrder;
