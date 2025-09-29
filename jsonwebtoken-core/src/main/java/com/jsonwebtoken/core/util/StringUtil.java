@@ -1,4 +1,4 @@
-package com.jsonwebtoken.core.common.util;
+package com.jsonwebtoken.core.util;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

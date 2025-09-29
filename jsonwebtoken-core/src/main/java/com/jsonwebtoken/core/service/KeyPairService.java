@@ -1,6 +1,8 @@
 package com.jsonwebtoken.core.service;
 
 import com.jsonwebtoken.core.config.RsaKeyGenerator;
+import com.jsonwebtoken.core.exception.TokenError;
+import com.jsonwebtoken.core.exception.TokenException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Base58;
@@ -22,21 +24,46 @@ public class KeyPairService {
 
 	/**
 	 * 키페어 생성
-	 * @param keyPair
-	 * @return
+	 *
+	 * @param keyPair 입력 맵 (PublicKey, PrivateKey 포함)
+	 * @return Base58 인코딩된 키 문자열 맵
 	 */
 	public Map<String, Object> createKeyPair(Map<String, Object> keyPair) {
-		Map<String, Object> strKeymap = new HashMap<>();
+		if (keyPair == null) {
+			throw new TokenException(TokenError.MISSING_KEY);
+		}
 
-		PublicKey publicKey = (PublicKey) keyPair.get("PublicKey");
-		PrivateKey privateKey = (PrivateKey) keyPair.get("PrivateKey");
+		Object pubObj = keyPair.get("PublicKey");
+		Object privObj = keyPair.get("PrivateKey");
 
-		String strPublicKey = Base58.encode(publicKey.getEncoded());
-		String strPrivateKey = Base58.encode(privateKey.getEncoded());
+		if (!(pubObj instanceof PublicKey)) {
+			throw new TokenException(TokenError.INVALID_KEY_INPUT);
+		}
+		if (!(privObj instanceof PrivateKey)) {
+			throw new TokenException(TokenError.INVALID_KEY_INPUT);
+		}
 
-		strKeymap.put("publicKey", strPublicKey);
-		strKeymap.put("privateKey", strPrivateKey);
-		return strKeymap;
+		PublicKey publicKey = (PublicKey) pubObj;
+		PrivateKey privateKey = (PrivateKey) privObj;
+
+		try {
+			byte[] pubEncoded = publicKey.getEncoded();
+			byte[] privEncoded = privateKey.getEncoded();
+
+			if (pubEncoded == null || privEncoded == null) {
+				throw new TokenException(TokenError.KEY_ENCODING_FAILED);
+			}
+
+			String strPublicKey = Base58.encode(pubEncoded);
+			String strPrivateKey = Base58.encode(privEncoded);
+
+			Map<String, Object> strKeymap = new HashMap<>();
+			strKeymap.put("publicKey", strPublicKey);
+			strKeymap.put("privateKey", strPrivateKey);
+			return strKeymap;
+		} catch (Exception e) {
+			throw new TokenException(TokenError.BASE58_ENCODING_FAILED, e);
+		}
 	}
 
 	protected String getPrivateKey() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {

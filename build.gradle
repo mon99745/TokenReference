@@ -6,7 +6,7 @@ plugins {
 
 allprojects {
 	group = 'com.jsonwebtoken'
-	version = '1.2.0'
+	version = '1.2.1'
 	java {
 		sourceCompatibility = '1.8'
 	}

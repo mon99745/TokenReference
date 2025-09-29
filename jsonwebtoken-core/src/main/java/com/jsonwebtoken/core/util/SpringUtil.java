@@ -1,4 +1,4 @@
-package com.jsonwebtoken.core.common.util;
+package com.jsonwebtoken.core.util;
 
 import com.google.common.annotations.VisibleForTesting;
 import lombok.Setter;

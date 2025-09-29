@@ -19,7 +19,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-import com.jsonwebtoken.core.common.exception.CommonException;
+import com.jsonwebtoken.core.exception.common.CommonException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
