@@ -245,7 +245,8 @@ public class RsaKeyGenerator implements InitializingBean {
 
 		PublicKey pubKey = getPublicKey(publicKey);
 		Cipher cipher2 = Cipher.getInstance("RSA");
-		byte[] byteEncrypted = Base64.getDecoder().decode(encrypted.getBytes());
+		String fixedEncrypted = encrypted.trim().replaceAll("\\s+", "");
+		byte[] byteEncrypted = Base64.getDecoder().decode(fixedEncrypted);
 		cipher2.init(Cipher.DECRYPT_MODE, pubKey);
 		byte[] bytePlain = cipher2.doFinal(byteEncrypted);
 		String decrypted = new String(bytePlain, "utf-8");
