@@ -1,8 +1,16 @@
 plugins {
 	id 'java'
 }
+
+ext {
+	libName = 'jsonwebtoken-app'
+	libVersion = version
+}
+
 jar {
 	enabled = true
+	archiveBaseName.set(libName)
+	archiveVersion.set(libVersion)
 }
 
 bootJar {

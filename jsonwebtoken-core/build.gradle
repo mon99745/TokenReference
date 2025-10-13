@@ -2,9 +2,15 @@ plugins {
 	id 'java'
 }
 
+ext {
+	libName = 'jsonwebtoken'
+	libVersion = version
+}
+
 jar {
 	enabled = true
-	archiveClassifier = ''
+	archiveBaseName.set(libName)
+	archiveVersion.set(libVersion)
 }
 
 bootJar {
@@ -16,10 +22,15 @@ tasks.named('test') {
 }
 
 task sourcesJar(type: Jar) {
+	from sourceSets.main.allSource
+	archiveBaseName.set(libName)
+	archiveVersion.set(libVersion)
 	archiveClassifier.set('sources')
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
+	archiveBaseName.set(libName)
+	archiveVersion.set(libVersion)
 	archiveClassifier.set('javadoc')
 }
 
