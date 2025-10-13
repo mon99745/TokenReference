@@ -1,5 +1,7 @@
 plugins {
 	id 'java'
+	// https://plugins.gradle.org/plugin/com.github.johnrengelman.shadow
+	id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 ext {
@@ -11,10 +13,21 @@ jar {
 	enabled = true
 	archiveBaseName.set(libName)
 	archiveVersion.set(libVersion)
+
+	dependsOn shadowJar
 }
 
-bootJar {
-	enabled = false
+shadowJar {
+	archiveBaseName.set(libName)
+	archiveVersion.set(libVersion)
+	archiveClassifier.set('')
+	mergeServiceFiles()
+
+	dependencies {
+		include(dependency('org.bitcoinj:bitcoinj-core'))
+		include(dependency('com.google.guava:guava'))
+		include(dependency('org.apache.commons:commons-lang3'))
+	}
 }
 
 tasks.named('test') {
