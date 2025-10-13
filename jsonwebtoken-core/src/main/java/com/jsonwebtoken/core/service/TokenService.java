@@ -68,20 +68,20 @@ public class TokenService {
 		try {
 			/** Header 생성 */
 			String header = createHeader();
-			log.info("header = {}, header byte = {}", header, header.getBytes().length);
+			log.debug("header = {}, header byte = {}", header, header.getBytes().length);
 
 			/** Payload 생성 */
 			String payload = createPayload(claims);
-			log.info("payload = {}, payload byte = {}", payload, payload.getBytes().length);
+			log.debug("payload = {}, payload byte = {}", payload, payload.getBytes().length);
 
 			/** VerifyCode 생성 */
 			String verifyCode = setVerifyCode(header, payload);
-			log.info("verifyCode = {}, verifyCode byte = {}", verifyCode, verifyCode.getBytes().length);
+			log.debug("verifyCode = {}, verifyCode byte = {}", verifyCode, verifyCode.getBytes().length);
 
 			/** Signature 생성 */
 			String privateKey = keyPairService.getPrivateKey();
 			String signature = createSignature(verifyCode, privateKey);
-			log.info("signature = {}, signature byte = {}", signature, signature.getBytes().length);
+			log.debug("signature = {}, signature byte = {}", signature, signature.getBytes().length);
 
 			/** Json Web Token 생성 */
 			String jwt = combineToken(header, String.join("", payload), signature);
