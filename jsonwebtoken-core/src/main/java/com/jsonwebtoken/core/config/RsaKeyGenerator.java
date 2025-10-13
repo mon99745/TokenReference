@@ -62,16 +62,15 @@ public class RsaKeyGenerator implements InitializingBean {
 	 */
 	private boolean keyFileCheck() {
 		File folder = new File(verifyProperties.getPath());
-		if (!folder.exists()) {
-			return false;
-		} else {
-			String[] files = new String[]{verifyProperties.getPath() + "public.pem",
-					verifyProperties.getPath() + "private.pem"};
-			for (String f : files) {
-				File file = new File(f);
-				if (!file.exists())
-					return false;
-			}
+		if (!folder.exists()) return false;
+
+		String[] files = {
+				verifyProperties.getPath() + "public.pem",
+				verifyProperties.getPath() + "private.pem"
+		};
+		for (String f : files) {
+			File file = new File(f);
+			if (!file.exists()) return false;
 		}
 		return true;
 	}
