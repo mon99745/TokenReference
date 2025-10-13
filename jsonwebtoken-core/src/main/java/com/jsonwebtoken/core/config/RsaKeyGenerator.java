@@ -82,40 +82,25 @@ public class RsaKeyGenerator implements InitializingBean {
 		KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(verifyProperties.getAlg());
 		keyPairGenerator.initialize(verifyProperties.getKeySize());
 		KeyPair keyPair = keyPairGenerator.genKeyPair();
-		Map<String, String> keys = new LinkedHashMap<>();
-		keys.put("PublicKey", Base58.encode(keyPair.getPublic().getEncoded()));
-		keys.put("PrivateKey", Base58.encode(keyPair.getPrivate().getEncoded()));
-		FileOutputStream fos = null;
-		try {
-			File folder = new File(verifyProperties.getPath());
-			if (!folder.exists()) {
-				folder.mkdir();
+
+		File folder = new File(verifyProperties.getPath());
+		if (!folder.exists()) folder.mkdirs();
+
+		File[] files = folder.listFiles();
+		if (files != null) {
+			for (File f : files) f.delete();
+		}
+
+		Map<String, byte[]> keys = new LinkedHashMap<>();
+		keys.put("public.pem", keyPair.getPublic().getEncoded());
+		keys.put("private.pem", keyPair.getPrivate().getEncoded());
+
+		for (Map.Entry<String, byte[]> entry : keys.entrySet()) {
+			File file = new File(folder, entry.getKey());
+			try (FileOutputStream fos = new FileOutputStream(file)) {
+				fos.write(Base58.encode(entry.getValue()).getBytes(StandardCharsets.UTF_8));
 			}
-			File[] files = folder.listFiles();
-			for (File f : files) {
-				f.delete();
-			}
-			for (Map.Entry<String, String> entry : keys.entrySet()) {
-				String path = null;
-				if (entry.getKey().equals("PublicKey")) {
-					path = verifyProperties.getPath() + "public.pem";
-				} else if (entry.getKey().equals("PrivateKey")) {
-					path = verifyProperties.getPath() + "private.pem";
-				} else {
-					log.info("Key is not found in the key box");
-				}
-				File file = new File(path);
-				fos = new FileOutputStream(file);
-				fos.write(entry.getValue().getBytes());
-				log.info("RSA 키를 새로 생성하였습니다.");
-			}
-		} catch (IOException e) {
-			throw e;
-		} finally {
-			if (fos != null) {
-				fos.close();
-				fos.flush();
-			}
+			log.info("{} has been created.", entry.getKey());
 		}
 	}
 
