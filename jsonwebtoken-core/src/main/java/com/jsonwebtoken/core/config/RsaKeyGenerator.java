@@ -45,15 +45,14 @@ public class RsaKeyGenerator implements InitializingBean {
 	protected final VerifyProperties verifyProperties;
 
 	@Override
-	public void afterPropertiesSet() throws NoSuchAlgorithmException, IOException {
+	public void afterPropertiesSet() {
 		try {
 			if (!keyFileCheck()) {
 				createKeyFile();
 			} else {
-				log.info("RSA keys exist and use them.");
+				log.info("RSA key already exists and uses it.");
 			}
 		} catch (NoSuchAlgorithmException | IOException e) {
-			log.error("RSA key initialization failed", e);
 			throw new IllegalStateException("RSA key initialization failed", e);
 		}
 	}
@@ -104,12 +103,12 @@ public class RsaKeyGenerator implements InitializingBean {
 				} else if (entry.getKey().equals("PrivateKey")) {
 					path = verifyProperties.getPath() + "private.pem";
 				} else {
-					log.error("Key is not found in the key box");
+					log.info("Key is not found in the key box");
 				}
 				File file = new File(path);
 				fos = new FileOutputStream(file);
 				fos.write(entry.getValue().getBytes());
-				log.info("Create a new RSA key");
+				log.info("RSA 키를 새로 생성하였습니다.");
 			}
 		} catch (IOException e) {
 			throw e;
