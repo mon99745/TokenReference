@@ -1,7 +1,7 @@
 package com.security.jsonwebtoken.controller;
 
+import com.jsonwebtoken.core.util.JsonUtil;
 import com.security.jsonwebtoken.annotation.ControllerTest;
-import com.jsonwebtoken.app.util.JsonUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

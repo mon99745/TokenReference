@@ -45,11 +45,15 @@ public class RsaKeyGenerator implements InitializingBean {
 	protected final VerifyProperties verifyProperties;
 
 	@Override
-	public void afterPropertiesSet() throws NoSuchAlgorithmException, IOException {
-		if (!keyFileCheck()) {
-			createKeyFile();
-		} else {
-			log.info("RSA 키가 존재하여 기존 키를 활용합니다.");
+	public void afterPropertiesSet() {
+		try {
+			if (!keyFileCheck()) {
+				createKeyFile();
+			} else {
+				log.info("RSA key already exists and uses it.");
+			}
+		} catch (NoSuchAlgorithmException | IOException e) {
+			throw new IllegalStateException("RSA key initialization failed", e);
 		}
 	}
 
@@ -58,16 +62,15 @@ public class RsaKeyGenerator implements InitializingBean {
 	 */
 	private boolean keyFileCheck() {
 		File folder = new File(verifyProperties.getPath());
-		if (!folder.exists()) {
-			return false;
-		} else {
-			String[] files = new String[]{verifyProperties.getPath() + "public.pem",
-					verifyProperties.getPath() + "private.pem"};
-			for (String f : files) {
-				File file = new File(f);
-				if (!file.exists())
-					return false;
-			}
+		if (!folder.exists()) return false;
+
+		String[] files = {
+				verifyProperties.getPath() + "public.pem",
+				verifyProperties.getPath() + "private.pem"
+		};
+		for (String f : files) {
+			File file = new File(f);
+			if (!file.exists()) return false;
 		}
 		return true;
 	}
@@ -79,40 +82,25 @@ public class RsaKeyGenerator implements InitializingBean {
 		KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(verifyProperties.getAlg());
 		keyPairGenerator.initialize(verifyProperties.getKeySize());
 		KeyPair keyPair = keyPairGenerator.genKeyPair();
-		Map<String, String> keys = new LinkedHashMap<>();
-		keys.put("PublicKey", Base58.encode(keyPair.getPublic().getEncoded()));
-		keys.put("PrivateKey", Base58.encode(keyPair.getPrivate().getEncoded()));
-		FileOutputStream fos = null;
-		try {
-			File folder = new File(verifyProperties.getPath());
-			if (!folder.exists()) {
-				folder.mkdir();
+
+		File folder = new File(verifyProperties.getPath());
+		if (!folder.exists()) folder.mkdirs();
+
+		File[] files = folder.listFiles();
+		if (files != null) {
+			for (File f : files) f.delete();
+		}
+
+		Map<String, byte[]> keys = new LinkedHashMap<>();
+		keys.put("public.pem", keyPair.getPublic().getEncoded());
+		keys.put("private.pem", keyPair.getPrivate().getEncoded());
+
+		for (Map.Entry<String, byte[]> entry : keys.entrySet()) {
+			File file = new File(folder, entry.getKey());
+			try (FileOutputStream fos = new FileOutputStream(file)) {
+				fos.write(Base58.encode(entry.getValue()).getBytes(StandardCharsets.UTF_8));
 			}
-			File[] files = folder.listFiles();
-			for (File f : files) {
-				f.delete();
-			}
-			for (Map.Entry<String, String> entry : keys.entrySet()) {
-				String path = null;
-				if (entry.getKey().equals("PublicKey")) {
-					path = verifyProperties.getPath() + "public.pem";
-				} else if (entry.getKey().equals("PrivateKey")) {
-					path = verifyProperties.getPath() + "private.pem";
-				} else {
-					log.info("Key is not found in the key box");
-				}
-				File file = new File(path);
-				fos = new FileOutputStream(file);
-				fos.write(entry.getValue().getBytes());
-				log.info("RSA 키를 새로 생성하였습니다.");
-			}
-		} catch (IOException e) {
-			throw e;
-		} finally {
-			if (fos != null) {
-				fos.close();
-				fos.flush();
-			}
+			log.info("{} has been created.", entry.getKey());
 		}
 	}
 
@@ -120,24 +108,17 @@ public class RsaKeyGenerator implements InitializingBean {
 	 * 키 페어 생성하는 메소드
 	 */
 	public Map<String, Object> createKey() {
-		Map<String, Object> Map = new HashMap<>();
+		Map<String, Object> keyMap = new HashMap<>();
 		try {
-			// RSA 키페어 생성을 위한 KeyPairGenerator 인스턴스 생성
 			KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(verifyProperties.getAlg());
-
-			// 키페어 생성 시 사용할 키파라미터 설정 (여기서는 기본값 사용)
 			keyPairGenerator.initialize(verifyProperties.getKeySize());
-
-			// 키페어 생성
 			KeyPair keyPair = keyPairGenerator.genKeyPair();
-
-			// 생성된 공개키와 개인키 출력
-			Map.put("PublicKey", keyPair.getPublic());
-			Map.put("PrivateKey", keyPair.getPrivate());
+			keyMap.put("PublicKey", keyPair.getPublic());
+			keyMap.put("PrivateKey", keyPair.getPrivate());
 		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
+			log.error("KeyPair generation failed", e);
 		}
-		return Map;
+		return keyMap;
 	}
 
 
@@ -200,7 +181,7 @@ public class RsaKeyGenerator implements InitializingBean {
 			InvalidKeySpecException, InvalidKeyException, NoSuchPaddingException,
 			IllegalBlockSizeException, BadPaddingException {
 		PublicKey pubKey = getPublicKey(publicKey);
-		Cipher cipher = Cipher.getInstance("RSA");
+		Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 		cipher.init(Cipher.ENCRYPT_MODE, pubKey);
 		byte[] bytePlain = cipher.doFinal(plainText.getBytes());
 		String encrypted = Base64.getEncoder().encodeToString(bytePlain);
@@ -214,11 +195,11 @@ public class RsaKeyGenerator implements InitializingBean {
 			InvalidKeySpecException, IOException, InvalidKeyException, NoSuchPaddingException,
 			IllegalBlockSizeException, BadPaddingException {
 		PrivateKey prvKey = getPrivateKey(privateKey);
-		Cipher cipher2 = Cipher.getInstance("RSA");
+		Cipher cipher2 = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 		byte[] byteEncrypted = Base64.getDecoder().decode(encrypted.getBytes());
 		cipher2.init(Cipher.DECRYPT_MODE, prvKey);
 		byte[] bytePlain = cipher2.doFinal(byteEncrypted);
-		String decrypted = new String(bytePlain, "utf-8");
+		String decrypted = new String(bytePlain, StandardCharsets.UTF_8);
 		return decrypted;
 	}
 
@@ -229,7 +210,7 @@ public class RsaKeyGenerator implements InitializingBean {
 			InvalidKeySpecException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException,
 			BadPaddingException {
 		PrivateKey prvKey = getPrivateKey(privateKey);
-		Cipher cipher = Cipher.getInstance("RSA");
+		Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 		cipher.init(Cipher.ENCRYPT_MODE, prvKey);
 		byte[] bytePlain = cipher.doFinal(plainText.getBytes());
 		String encrypted = Base64.getEncoder().encodeToString(bytePlain);
@@ -244,12 +225,12 @@ public class RsaKeyGenerator implements InitializingBean {
 			IllegalBlockSizeException, BadPaddingException {
 
 		PublicKey pubKey = getPublicKey(publicKey);
-		Cipher cipher2 = Cipher.getInstance("RSA");
+		Cipher cipher2 = Cipher.getInstance(("RSA/ECB/PKCS1Padding"));
 		String fixedEncrypted = encrypted.trim().replaceAll("\\s+", "");
 		byte[] byteEncrypted = Base64.getDecoder().decode(fixedEncrypted);
 		cipher2.init(Cipher.DECRYPT_MODE, pubKey);
 		byte[] bytePlain = cipher2.doFinal(byteEncrypted);
-		String decrypted = new String(bytePlain, "utf-8");
+		String decrypted = new String(bytePlain, StandardCharsets.UTF_8);
 		return decrypted;
 	}
 }

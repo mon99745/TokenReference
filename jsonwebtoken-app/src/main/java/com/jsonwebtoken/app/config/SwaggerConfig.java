@@ -33,7 +33,6 @@ public class SwaggerConfig {
 	}
 
 	public ApiInfo apiInfo() {
-		log.info("apiInfo");
 		return new ApiInfoBuilder()
 				.title("SpringBoot Rest API Documentation")
 				.description("springboot rest api practice.")
