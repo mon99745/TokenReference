@@ -1,6 +1,6 @@
 package com.jsonwebtoken.core.service;
 
-import com.jsonwebtoken.core.config.VerifyProperties;
+import com.jsonwebtoken.core.config.TokenProperties;
 import com.jsonwebtoken.core.config.RsaKeyGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 public class SignDocService {
 	protected final RsaKeyGenerator rsaKeyGenerator;
 	protected final TokenService tokenService;
-	protected final VerifyProperties verifyProperties;
+	protected final TokenProperties tokenProperties;
 
 //	TODO : createSignDocument
 //	public JSONObject createSignDocument(String claim) throws IOException, NoSuchPaddingException,

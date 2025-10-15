@@ -8,12 +8,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableConfigurationProperties(VerifyProperties.class)
+@EnableConfigurationProperties(TokenProperties.class)
 public class TokenAutoConfig {
 	@Bean
 	@ConditionalOnMissingBean(RsaKeyGenerator.class)
-	public RsaKeyGenerator rsaKeyGenerator(VerifyProperties verifyProperties) {
-		return new RsaKeyGenerator(verifyProperties);
+	public RsaKeyGenerator rsaKeyGenerator(TokenProperties tokenProperties) {
+		return new RsaKeyGenerator(tokenProperties);
 	}
 
 	@Bean
@@ -24,8 +24,8 @@ public class TokenAutoConfig {
 
 	@Bean
 	@ConditionalOnMissingBean(TokenService.class)
-	public TokenService tokenService(RsaKeyGenerator rsaKeyGenerator, VerifyProperties verifyProperties,
+	public TokenService tokenService(RsaKeyGenerator rsaKeyGenerator, TokenProperties tokenProperties,
 									 KeyPairService keyPairService) {
-		return new TokenService(rsaKeyGenerator, verifyProperties, keyPairService);
+		return new TokenService(rsaKeyGenerator, tokenProperties, keyPairService);
 	}
 }

@@ -12,18 +12,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Data
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@ConfigurationProperties(prefix = VerifyProperties.PROPERTY_PREFIX)
-public class VerifyProperties {
+@ConfigurationProperties(prefix = TokenProperties.PROPERTY_PREFIX)
+public class TokenProperties {
 	/**
 	 * 설정 타이틀
 	 */
-	public static final String PROPERTY_PREFIX = "verify";
+	public static final String PROPERTY_PREFIX = "jwt";
 
 	/**
 	 * 설정 정보
 	 */
 	@Getter
-	private static VerifyProperties instance = new VerifyProperties();
+	private static TokenProperties instance = new TokenProperties();
 
 	/**
 	 * 키 페어 경로

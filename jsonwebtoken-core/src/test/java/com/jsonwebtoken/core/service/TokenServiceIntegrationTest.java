@@ -1,7 +1,7 @@
 package com.jsonwebtoken.core.service;
 
 import com.jsonwebtoken.core.config.RsaKeyGenerator;
-import com.jsonwebtoken.core.config.VerifyProperties;
+import com.jsonwebtoken.core.config.TokenProperties;
 import com.jsonwebtoken.core.exception.TokenException;
 import com.jsonwebtoken.core.model.dto.Claims;
 import com.jsonwebtoken.core.model.dto.Token;
@@ -31,12 +31,12 @@ public class TokenServiceIntegrationTest {
 	private RsaKeyGenerator rsaKeyGenerator;
 
 	@Mock
-	private VerifyProperties verifyProperties;
+	private TokenProperties tokenProperties;
 
 	@BeforeEach
 	public void setup() {
 		MockitoAnnotations.openMocks(this);
-		tokenService = new TokenService(rsaKeyGenerator, verifyProperties, keyPairService);
+		tokenService = new TokenService(rsaKeyGenerator, tokenProperties, keyPairService);
 	}
 
 	@Test
@@ -47,8 +47,8 @@ public class TokenServiceIntegrationTest {
 		claimMap.put("role", "admin");
 
 		// -------- Header 설정 --------
-		when(verifyProperties.getTyp()).thenReturn("JWT");
-		when(verifyProperties.getAlg()).thenReturn("HS256");
+		when(tokenProperties.getTyp()).thenReturn("JWT");
+		when(tokenProperties.getAlg()).thenReturn("HS256");
 
 		// -------- KeyPairService & RSA --------
 		when(keyPairService.getPrivateKey()).thenReturn("private-key");

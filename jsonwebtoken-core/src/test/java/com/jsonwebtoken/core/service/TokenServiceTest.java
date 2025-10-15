@@ -1,7 +1,7 @@
 package com.jsonwebtoken.core.service;
 
 import com.jsonwebtoken.core.config.RsaKeyGenerator;
-import com.jsonwebtoken.core.config.VerifyProperties;
+import com.jsonwebtoken.core.config.TokenProperties;
 import com.jsonwebtoken.core.exception.TokenException;
 import com.jsonwebtoken.core.model.dto.Token;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,12 +28,12 @@ public class TokenServiceTest {
 	private RsaKeyGenerator rsaKeyGenerator;
 
 	@Mock
-	private VerifyProperties verifyProperties;
+	private TokenProperties tokenProperties;
 
 	@BeforeEach
 	public void setup() {
 		MockitoAnnotations.openMocks(this);
-		tokenService = new TokenService(rsaKeyGenerator, verifyProperties, keyPairService);
+		tokenService = new TokenService(rsaKeyGenerator, tokenProperties, keyPairService);
 	}
 
 	// -------- createKeyPair --------
@@ -77,15 +77,15 @@ public class TokenServiceTest {
 	// -------- createHeader --------
 	@Test
 	public void testCreateHeader_MissingProperties() {
-		when(verifyProperties.getTyp()).thenReturn(null);
-		when(verifyProperties.getAlg()).thenReturn("HS256");
+		when(tokenProperties.getTyp()).thenReturn(null);
+		when(tokenProperties.getAlg()).thenReturn("HS256");
 		assertThrows(TokenException.class, () -> tokenService.createHeader());
 	}
 
 	@Test
 	public void testCreateHeader_ValidProperties() {
-		when(verifyProperties.getTyp()).thenReturn("JWT");
-		when(verifyProperties.getAlg()).thenReturn("HS256");
+		when(tokenProperties.getTyp()).thenReturn("JWT");
+		when(tokenProperties.getAlg()).thenReturn("HS256");
 		String header = tokenService.createHeader();
 		assertNotNull(header);
 	}

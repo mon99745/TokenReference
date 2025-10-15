@@ -66,11 +66,19 @@ public class KeyPairService {
 		}
 	}
 
-	protected String getPrivateKey() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-		return Base58.encode(rsaKeyGenerator.getPrivateKey().getEncoded());
+	protected String getPrivateKey() {
+		try {
+			return Base58.encode(rsaKeyGenerator.getPrivateKey().getEncoded());
+		} catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+			throw new TokenException(TokenError.FAILED_ENCRYPT, e);
+		}
 	}
 
-	protected String getPublicKey() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-		return Base58.encode(rsaKeyGenerator.getPublicKey().getEncoded());
+	protected String getPublicKey() {
+		try {
+			return Base58.encode(rsaKeyGenerator.getPublicKey().getEncoded());
+		} catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+			throw new TokenException(TokenError.FAILED_ENCRYPT, e);
+		}
 	}
 }

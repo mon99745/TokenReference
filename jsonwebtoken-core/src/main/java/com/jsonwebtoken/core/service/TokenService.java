@@ -1,6 +1,6 @@
 package com.jsonwebtoken.core.service;
 
-import com.jsonwebtoken.core.config.VerifyProperties;
+import com.jsonwebtoken.core.config.TokenProperties;
 import com.jsonwebtoken.core.config.RsaKeyGenerator;
 import com.jsonwebtoken.core.exception.TokenError;
 import com.jsonwebtoken.core.exception.TokenException;
@@ -18,14 +18,7 @@ import org.bitcoinj.core.Base58;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-
 import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.Map;
 
 @Slf4j
@@ -33,7 +26,7 @@ import java.util.Map;
 @Service
 public class TokenService {
 	protected final RsaKeyGenerator rsaKeyGenerator;
-	protected final VerifyProperties verifyProperties;
+	protected final TokenProperties tokenProperties;
 	protected final KeyPairService keyPairService;
 
 	/**
@@ -96,7 +89,7 @@ public class TokenService {
 
 		} catch (IllegalArgumentException e) {
 			throw new TokenException(TokenError.INVALID_CLAIM_FORMAT, e);
-		} catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+		} catch (TokenException e) {
 			throw new TokenException(TokenError.JWT_CREATION_FAILED, e);
 		}
 	}
@@ -127,8 +120,7 @@ public class TokenService {
 
 			/** 위변조 검증(해시 비교) */
 			if (!newVerifyCode.equals(signedVerifyCode)) {
-				throw new TokenException(TokenError.INVALID_KEY_INPUT,
-						new IllegalArgumentException("토큰이 위변조 되었습니다."));
+				throw new TokenException(TokenError.INVALID_TOKEN);
 			}
 
 			return VerifyTokenResponse.builder()
@@ -139,10 +131,6 @@ public class TokenService {
 
 		} catch (IllegalArgumentException e) {
 			throw new TokenException(TokenError.INVALID_CLAIM_FORMAT, e);
-		} catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException |
-				 NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException |
-				 InvalidKeyException e) {
-			throw new TokenException(TokenError.JWT_CREATION_FAILED, e);
 		}
 	}
 
@@ -171,10 +159,6 @@ public class TokenService {
 
 		} catch (IllegalArgumentException e) {
 			throw new TokenException(TokenError.INVALID_CLAIM_FORMAT, e);
-		} catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException |
-				 NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException |
-				 InvalidKeyException e) {
-			throw new TokenException(TokenError.JWT_CREATION_FAILED, e);
 		}
 	}
 
@@ -205,8 +189,8 @@ public class TokenService {
 	}
 
 	protected String createHeader() {
-		String typ = verifyProperties.getTyp();
-		String alg = verifyProperties.getAlg();
+		String typ = tokenProperties.getTyp();
+		String alg = tokenProperties.getAlg();
 
 		if (typ == null || typ.isEmpty() || alg == null || alg.isEmpty()) {
 			throw new TokenException(TokenError.MISSING_CLAIM);
@@ -247,13 +231,8 @@ public class TokenService {
 		if (verifyCode == null || privateKey == null) {
 			throw new TokenException(TokenError.MISSING_CLAIM);
 		}
+		return rsaKeyGenerator.encryptPrvRSA(verifyCode, privateKey);
 
-		try {
-			return rsaKeyGenerator.encryptPrvRSA(verifyCode, privateKey);
-		} catch (NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException |
-				 InvalidKeySpecException | BadPaddingException | InvalidKeyException e) {
-			throw new TokenException(TokenError.JWT_CREATION_FAILED, e);
-		}
 	}
 
 	protected String combineToken(String header, String payload, String signature) {
@@ -288,8 +267,7 @@ public class TokenService {
 
 		String[] splitArray = token.split("\\.");
 		if (splitArray.length != 3) {
-			throw new TokenException(TokenError.INVALID_CLAIM_FORMAT,
-					new IllegalArgumentException("토큰 구조가 올바르지 않습니다."));
+			throw new TokenException(TokenError.INVALID_CLAIM_FORMAT);
 		}
 
 		return new Token(splitArray[0], splitArray[1], splitArray[2]);
