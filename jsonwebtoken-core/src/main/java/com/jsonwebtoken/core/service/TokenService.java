@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.security.MessageDigest;
 import java.util.Map;
 
 @Slf4j
@@ -35,6 +36,8 @@ public class TokenService {
 		TokenUtil.validateNotEmpty(requestClaim, TokenError.MISSING_CLAIM);
 		try {
 			return this.createJwt(TokenUtil.setClaims(requestClaim));
+		} catch (TokenException e) {
+			throw e;
 		} catch (IllegalArgumentException e) {
 			throw new TokenException(TokenError.INVALID_CLAIM_FORMAT, e);
 		} catch (Exception e) {
@@ -68,7 +71,7 @@ public class TokenService {
 			String signature = rsaKeyGenerator.encryptPrvRSA(verifyCode, privateKey);
 			log.debug("signature = {}, signature byte = {}", signature, signature.getBytes().length);
 
-			/** Json Web Token 생성 */
+			/** Json Web Token 결합 */
 			String jwt = TokenUtil.combineToken(header, String.join("", payload), signature);
 			log.debug("jwt = {}, jwt byte = {}", jwt, jwt.getBytes().length);
 
@@ -106,7 +109,7 @@ public class TokenService {
 			String signedVerifyCode = rsaKeyGenerator.decryptPubRSA(tokenObject.getSignature(), publicKey);
 
 			/** 위변조 검증(해시 비교) */
-			if (!newVerifyCode.equals(signedVerifyCode)) {
+			if (!MessageDigest.isEqual(newVerifyCode.getBytes(), signedVerifyCode.getBytes())) {
 				throw new TokenException(TokenError.INVALID_TOKEN);
 			}
 
