@@ -32,9 +32,7 @@ public class TokenService {
 	 * @return CreateTokenResponse
 	 */
 	public CreateTokenResponse createJwt(Map<String, String> requestClaim) {
-		if (requestClaim == null || requestClaim.isEmpty()) {
-			throw new TokenException(TokenError.MISSING_CLAIM);
-		}
+		TokenUtil.validateNotEmpty(requestClaim, TokenError.MISSING_CLAIM);
 		try {
 			return this.createJwt(TokenUtil.setClaims(requestClaim));
 		} catch (IllegalArgumentException e) {
@@ -51,9 +49,7 @@ public class TokenService {
 	 * @return CreateTokenResponse
 	 */
 	public CreateTokenResponse createJwt(Claims claims) {
-		if (claims == null) {
-			throw new TokenException(TokenError.MISSING_CLAIM);
-		}
+		TokenUtil.validateNotEmpty(claims, TokenError.MISSING_CLAIM);
 		try {
 			/** Header 생성 */
 			String header = TokenUtil.createHeader(tokenProperties.getTyp(), tokenProperties.getAlg());
@@ -74,7 +70,7 @@ public class TokenService {
 
 			/** Json Web Token 생성 */
 			String jwt = TokenUtil.combineToken(header, String.join("", payload), signature);
-			log.info("jwt = {}, jwt byte = {}", jwt, jwt.getBytes().length);
+			log.debug("jwt = {}, jwt byte = {}", jwt, jwt.getBytes().length);
 
 			return CreateTokenResponse.builder()
 					.resultMsg("Success")
@@ -96,10 +92,7 @@ public class TokenService {
 	 * @return VerifyTokenResponse
 	 */
 	public VerifyTokenResponse verifyJwt(String token) {
-		if (token == null || token.isEmpty()) {
-			throw new TokenException(TokenError.MISSING_CLAIM);
-		}
-
+		TokenUtil.validateNotEmpty(token, TokenError.MISSING_CLAIM);
 		try {
 			/** 토큰 구조 분류 */
 			Token tokenObject = TokenUtil.parseToken(token);
@@ -129,10 +122,7 @@ public class TokenService {
 	}
 
 	public ExtractClaimResponse extractClaimToJwt(String token) {
-		if (token == null || token.isEmpty()) {
-			throw new TokenException(TokenError.MISSING_CLAIM);
-		}
-
+		TokenUtil.validateNotEmpty(token, TokenError.MISSING_CLAIM);
 		try {
 			/** 토큰 구조 분류 */
 			Token tokenObject = TokenUtil.parseToken(token);

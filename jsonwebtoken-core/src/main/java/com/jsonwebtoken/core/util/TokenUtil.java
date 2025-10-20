@@ -15,6 +15,12 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class TokenUtil {
 	protected final RsaKeyGenerator rsaKeyGenerator;
+	public static void validateNotEmpty(Object obj, TokenError error) {
+		if (obj == null || (obj instanceof Map && ((Map<?, ?>) obj).isEmpty())
+				|| (obj instanceof String && ((String) obj).isEmpty())) {
+			throw new TokenException(error);
+		}
+	}
 	public static Claims setClaims(Map<String, String> requestClaim) {
 		if (requestClaim == null || requestClaim.isEmpty()) {
 			throw new TokenException(TokenError.MISSING_CLAIM);
