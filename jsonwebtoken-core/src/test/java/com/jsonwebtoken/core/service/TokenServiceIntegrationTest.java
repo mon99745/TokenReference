@@ -5,6 +5,7 @@ import com.jsonwebtoken.core.config.TokenProperties;
 import com.jsonwebtoken.core.exception.TokenException;
 import com.jsonwebtoken.core.model.dto.Claims;
 import com.jsonwebtoken.core.model.dto.Token;
+import com.jsonwebtoken.core.util.TokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -57,24 +58,24 @@ public class TokenServiceIntegrationTest {
 		when(rsaKeyGenerator.decryptPubRSA(anyString(), anyString())).thenAnswer(i -> i.getArgument(0));
 
 		// -------- JWT 생성 --------
-		Claims claims = tokenService.setClaims(claimMap);
-		String header = tokenService.createHeader();
-		String payload = tokenService.createPayload(claims);
-		String verifyCode = tokenService.setVerifyCode(header, payload);
-		String signature = tokenService.createSignature(verifyCode, keyPairService.getPrivateKey());
-		String jwt = tokenService.combineToken(header, payload, signature);
+		Claims claims = TokenUtil.setClaims(claimMap);
+		String header = TokenUtil.createHeader(tokenProperties.getTyp(), tokenProperties.getAlg());
+		String payload = TokenUtil.createPayload(claims);
+		String verifyCode = TokenUtil.setVerifyCode(header, payload);
+		String signature = rsaKeyGenerator.encryptPrvRSA(verifyCode, keyPairService.getPrivateKey());
+		String jwt = TokenUtil.combineToken(header, payload, signature);
 
 		assertNotNull(jwt);
 		assertTrue(jwt.contains("."), () -> "JWT는 점(.)으로 구분된 3부분이어야 함");
 
 		// -------- JWT 파싱 --------
-		Token tokenObj = tokenService.parseToken(jwt);
+		Token tokenObj = TokenUtil.parseToken(jwt);
 		assertEquals(header, tokenObj.getHeader());
 		assertEquals(payload, tokenObj.getPayload());
 		assertEquals(signature, tokenObj.getSignature());
 
 		// -------- Claim 읽기 --------
-		Object extractedClaims = tokenService.readClaim(tokenObj.getPayload());
+		Object extractedClaims = TokenUtil.readClaim(tokenObj.getPayload());
 		assertNotNull(extractedClaims);
 		assertTrue(extractedClaims.toString().contains("test-user"));
 		assertTrue(extractedClaims.toString().contains("admin"));
@@ -85,7 +86,7 @@ public class TokenServiceIntegrationTest {
 		// 잘못된 토큰 구조
 		String invalidToken = "abc.def";
 
-		TokenException ex = assertThrows(TokenException.class, () -> tokenService.parseToken(invalidToken));
+		TokenException ex = assertThrows(TokenException.class, () -> TokenUtil.parseToken(invalidToken));
 		assertTrue(ex.getMessage().contains("INVALID_CLAIM_FORMAT"));
 	}
 }

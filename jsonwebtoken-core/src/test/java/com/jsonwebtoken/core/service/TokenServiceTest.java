@@ -4,6 +4,7 @@ import com.jsonwebtoken.core.config.RsaKeyGenerator;
 import com.jsonwebtoken.core.config.TokenProperties;
 import com.jsonwebtoken.core.exception.TokenException;
 import com.jsonwebtoken.core.model.dto.Token;
+import com.jsonwebtoken.core.util.TokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -64,14 +65,14 @@ public class TokenServiceTest {
 	// -------- setClaims --------
 	@Test
 	public void testSetClaims_NullInput() {
-		assertThrows(TokenException.class, () -> tokenService.setClaims(null));
+		assertThrows(TokenException.class, () -> TokenUtil.setClaims(null));
 	}
 
 	@Test
 	public void testSetClaims_ValidInput() {
 		Map<String, String> claimsMap = new HashMap<>();
 		claimsMap.put("user", "test");
-		assertNotNull(tokenService.setClaims(claimsMap));
+		assertNotNull(TokenUtil.setClaims(claimsMap));
 	}
 
 	// -------- createHeader --------
@@ -79,14 +80,14 @@ public class TokenServiceTest {
 	public void testCreateHeader_MissingProperties() {
 		when(tokenProperties.getTyp()).thenReturn(null);
 		when(tokenProperties.getAlg()).thenReturn("HS256");
-		assertThrows(TokenException.class, () -> tokenService.createHeader());
+		assertThrows(TokenException.class, () -> TokenUtil.createHeader(tokenProperties.getTyp(), tokenProperties.getAlg()));
 	}
 
 	@Test
 	public void testCreateHeader_ValidProperties() {
 		when(tokenProperties.getTyp()).thenReturn("JWT");
 		when(tokenProperties.getAlg()).thenReturn("HS256");
-		String header = tokenService.createHeader();
+		String header = TokenUtil.createHeader(tokenProperties.getTyp(), tokenProperties.getAlg());
 		assertNotNull(header);
 	}
 
@@ -95,74 +96,62 @@ public class TokenServiceTest {
 	public void testCreatePayload_ValidClaims() {
 		Map<String, String> claimsMap = new HashMap<>();
 		claimsMap.put("user", "test");
-		assertNotNull(tokenService.createPayload(tokenService.setClaims(claimsMap)));
+		assertNotNull(TokenUtil.createPayload(TokenUtil.setClaims(claimsMap)));
 	}
 
 	// -------- setVerifyCode --------
 	@Test
 	public void testSetVerifyCode_NullInput() {
-		assertThrows(TokenException.class, () -> tokenService.setVerifyCode(null, "payload"));
+		assertThrows(TokenException.class, () -> TokenUtil.setVerifyCode(null, "payload"));
 	}
 
 	@Test
 	public void testSetVerifyCode_ValidInput() {
-		String code = tokenService.setVerifyCode("header", "payload");
+		String code = TokenUtil.setVerifyCode("header", "payload");
 		assertNotNull(code);
 	}
 
-	// -------- createSignature --------
-	@Test
-	public void testCreateSignature_NullInput() {
-		assertThrows(TokenException.class, () -> tokenService.createSignature(null, "privateKey"));
-	}
-
-	@Test
-	public void testCreateSignature_ValidInput() throws Exception {
-		when(rsaKeyGenerator.encryptPrvRSA("verifyCode", "privateKey")).thenReturn("signature");
-		String sig = tokenService.createSignature("verifyCode", "privateKey");
-		assertEquals("signature", sig);
-	}
 
 	// -------- combineToken --------
 	@Test
 	public void testCombineToken_NullInput() {
-		assertThrows(TokenException.class, () -> tokenService.combineToken("header", null, "sig"));
+		assertThrows(TokenException.class, () -> TokenUtil.combineToken("header", null, "sig"));
 	}
 
 	@Test
 	public void testCombineToken_ValidInput() {
-		String token = tokenService.combineToken("h", "p", "s");
+		String token = TokenUtil.combineToken("h", "p", "s");
 		assertEquals("h.p.s", token);
 	}
 
 	// -------- readClaim --------
 	@Test
 	public void testReadClaim_NullInput() {
-		assertThrows(TokenException.class, () -> tokenService.readClaim(null));
+		assertThrows(TokenException.class, () -> TokenUtil.readClaim(null));
 	}
 
 	@Test
 	public void testReadClaim_ValidInput() {
 		Map<String, String> claimsMap = new HashMap<>();
 		claimsMap.put("user", "test");
-		String payload = tokenService.createPayload(tokenService.setClaims(claimsMap));
-		assertNotNull(tokenService.readClaim(payload));
+		String payload = TokenUtil.createPayload(TokenUtil.setClaims(claimsMap));
+		assertNotNull(TokenUtil.readClaim(payload));
 	}
 
 	// -------- parseToken --------
 	@Test
 	public void testParseToken_NullInput() {
-		assertThrows(TokenException.class, () -> tokenService.parseToken(null));
+		assertThrows(TokenException.class, () -> TokenUtil.parseToken(null));
 	}
 
 	@Test
 	public void testParseToken_InvalidStructure() {
-		assertThrows(TokenException.class, () -> tokenService.parseToken("abc.def"));
+		assertThrows(TokenException.class, () -> TokenUtil.parseToken("abc.def"));
 	}
 
 	@Test
 	public void testParseToken_ValidToken() {
-		Token token = tokenService.parseToken("h.p.s");
+		Token token = TokenUtil.parseToken("h.p.s");
 		assertEquals("h", token.getHeader());
 		assertEquals("p", token.getPayload());
 		assertEquals("s", token.getSignature());

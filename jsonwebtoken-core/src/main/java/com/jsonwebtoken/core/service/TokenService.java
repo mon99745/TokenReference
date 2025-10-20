@@ -9,16 +9,12 @@ import com.jsonwebtoken.core.model.dto.reponse.ExtractClaimResponse;
 import com.jsonwebtoken.core.model.dto.reponse.VerifyTokenResponse;
 import com.jsonwebtoken.core.model.dto.Claims;
 import com.jsonwebtoken.core.model.dto.Token;
-import com.jsonwebtoken.core.util.ByteUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jsonwebtoken.core.util.HashUtil;
+import com.jsonwebtoken.core.util.TokenUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.bitcoinj.core.Base58;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.Map;
 
 @Slf4j
@@ -40,7 +36,7 @@ public class TokenService {
 			throw new TokenException(TokenError.MISSING_CLAIM);
 		}
 		try {
-			return this.createJwt(setClaims(requestClaim));
+			return this.createJwt(TokenUtil.setClaims(requestClaim));
 		} catch (IllegalArgumentException e) {
 			throw new TokenException(TokenError.INVALID_CLAIM_FORMAT, e);
 		} catch (Exception e) {
@@ -60,24 +56,24 @@ public class TokenService {
 		}
 		try {
 			/** Header 생성 */
-			String header = createHeader();
+			String header = TokenUtil.createHeader(tokenProperties.getTyp(), tokenProperties.getAlg());
 			log.debug("header = {}, header byte = {}", header, header.getBytes().length);
 
 			/** Payload 생성 */
-			String payload = createPayload(claims);
+			String payload = TokenUtil.createPayload(claims);
 			log.debug("payload = {}, payload byte = {}", payload, payload.getBytes().length);
 
 			/** VerifyCode 생성 */
-			String verifyCode = setVerifyCode(header, payload);
+			String verifyCode = TokenUtil.setVerifyCode(header, payload);
 			log.debug("verifyCode = {}, verifyCode byte = {}", verifyCode, verifyCode.getBytes().length);
 
 			/** Signature 생성 */
 			String privateKey = keyPairService.getPrivateKey();
-			String signature = createSignature(verifyCode, privateKey);
+			String signature = rsaKeyGenerator.encryptPrvRSA(verifyCode, privateKey);
 			log.debug("signature = {}, signature byte = {}", signature, signature.getBytes().length);
 
 			/** Json Web Token 생성 */
-			String jwt = combineToken(header, String.join("", payload), signature);
+			String jwt = TokenUtil.combineToken(header, String.join("", payload), signature);
 			log.info("jwt = {}, jwt byte = {}", jwt, jwt.getBytes().length);
 
 			return CreateTokenResponse.builder()
@@ -89,8 +85,6 @@ public class TokenService {
 
 		} catch (IllegalArgumentException e) {
 			throw new TokenException(TokenError.INVALID_CLAIM_FORMAT, e);
-		} catch (TokenException e) {
-			throw new TokenException(TokenError.JWT_CREATION_FAILED, e);
 		}
 	}
 
@@ -108,10 +102,10 @@ public class TokenService {
 
 		try {
 			/** 토큰 구조 분류 */
-			Token tokenObject = parseToken(token);
+			Token tokenObject = TokenUtil.parseToken(token);
 
 			/** VerifyCode 생성 */
-			String newVerifyCode = setVerifyCode(tokenObject.getHeader(), tokenObject.getPayload());
+			String newVerifyCode = TokenUtil.setVerifyCode(tokenObject.getHeader(), tokenObject.getPayload());
 			log.info("verifyCode = {}, verifyCode byte = {}", newVerifyCode, newVerifyCode.getBytes().length);
 
 			/** 서명 검증(비대칭키 복호화) */
@@ -141,14 +135,14 @@ public class TokenService {
 
 		try {
 			/** 토큰 구조 분류 */
-			Token tokenObject = parseToken(token);
+			Token tokenObject = TokenUtil.parseToken(token);
 
 			/** 서명 검증(비대칭키 복호화) */
 			String publicKey = keyPairService.getPublicKey();
 			rsaKeyGenerator.decryptPubRSA(tokenObject.getSignature(), publicKey);
 
 			/** 클레임 조회 */
-			Object claims = readClaim(tokenObject.getPayload());
+			Object claims = TokenUtil.readClaim(tokenObject.getPayload());
 
 			return ExtractClaimResponse.builder()
 					.resultMsg("Success")
@@ -160,116 +154,5 @@ public class TokenService {
 		} catch (IllegalArgumentException e) {
 			throw new TokenException(TokenError.INVALID_CLAIM_FORMAT, e);
 		}
-	}
-
-	protected Claims setClaims(Map<String, String> requestClaim) {
-		if (requestClaim == null || requestClaim.isEmpty()) {
-			throw new TokenException(TokenError.MISSING_CLAIM);
-		}
-
-		try {
-			Claims.RegisteredClaim registeredClaim = Claims.RegisteredClaim.builder()
-					.issuer("security.com") // 발급자
-					.subject("Json Web Token") // 주제
-					.expiration("2025-01-31T23:59:59Z") // 만료 시간 (ISO-8601 형식)
-					.issuedAt("2025-01-21T10:00:00Z") // 발급 시간 (ISO-8601 형식)
-					.build();
-
-			Claims.PublicClaim publicClaim = Claims.PublicClaim.builder()
-					.publicClaim(requestClaim)
-					.build();
-
-			return Claims.builder()
-					.registeredClaims(registeredClaim)
-					.publicClaims(publicClaim)
-					.build();
-		} catch (Exception e) {
-			throw new TokenException(TokenError.INVALID_CLAIM_FORMAT, e);
-		}
-	}
-
-	protected String createHeader() {
-		String typ = tokenProperties.getTyp();
-		String alg = tokenProperties.getAlg();
-
-		if (typ == null || typ.isEmpty() || alg == null || alg.isEmpty()) {
-			throw new TokenException(TokenError.MISSING_CLAIM);
-		}
-
-		try {
-			byte[] byteHeaderData = ByteUtil.stringToBytes(typ + alg);
-			return Base58.encode(byteHeaderData);
-		} catch (Exception e) {
-			throw new TokenException(TokenError.BASE58_ENCODING_FAILED, e);
-		}
-	}
-
-	protected String createPayload(Claims claims) {
-		try {
-			ObjectMapper objectMapper = new ObjectMapper();
-			String strClaims = objectMapper.writeValueAsString(claims);
-			byte[] bytePayloadData = ByteUtil.stringToBytes(strClaims);
-			return Base58.encode(bytePayloadData);
-		} catch (Exception e) {
-			throw new TokenException(TokenError.BASE58_ENCODING_FAILED, e);
-		}
-	}
-
-	protected String setVerifyCode(String header, String payload) {
-		if (header == null || payload == null) {
-			throw new TokenException(TokenError.MISSING_CLAIM);
-		}
-
-		try {
-			return HashUtil.sha256(header + payload);
-		} catch (Exception e) {
-			throw new TokenException(TokenError.JWT_CREATION_FAILED, e);
-		}
-	}
-
-	protected String createSignature(String verifyCode, String privateKey) {
-		if (verifyCode == null || privateKey == null) {
-			throw new TokenException(TokenError.MISSING_CLAIM);
-		}
-		return rsaKeyGenerator.encryptPrvRSA(verifyCode, privateKey);
-
-	}
-
-	protected String combineToken(String header, String payload, String signature) {
-		if (header == null || payload == null || signature == null) {
-			throw new TokenException(TokenError.MISSING_CLAIM);
-		}
-		return header + "." + payload + "." + signature;
-	}
-
-	protected Object readClaim(String payload) {
-		if (payload == null || payload.isEmpty()) {
-			throw new TokenException(TokenError.MISSING_CLAIM);
-		}
-
-		ObjectMapper objectMapper = new ObjectMapper();
-		byte[] decodedBytes;
-		try {
-			decodedBytes = Base58.decode(payload);
-			String strClaim = ByteUtil.bytesToUtfString(decodedBytes);
-			return objectMapper.readTree(strClaim);
-		} catch (IOException e) {
-			throw new TokenException(TokenError.INVALID_CLAIM_FORMAT, e);
-		} catch (Exception e) {
-			throw new TokenException(TokenError.JWT_CREATION_FAILED, e);
-		}
-	}
-
-	protected Token parseToken(String token) {
-		if (token == null || token.isEmpty()) {
-			throw new TokenException(TokenError.MISSING_CLAIM);
-		}
-
-		String[] splitArray = token.split("\\.");
-		if (splitArray.length != 3) {
-			throw new TokenException(TokenError.INVALID_CLAIM_FORMAT);
-		}
-
-		return new Token(splitArray[0], splitArray[1], splitArray[2]);
 	}
 }
