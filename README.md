@@ -1,11 +1,21 @@
-# Json Web Token, JwtsReference
-이 프로젝트는 io.jsonwebtoken:jjwt-api 라이브러리를 대체하여 JwtProvider 역할을 수행하는 목적으로 작성된 결과물이며,
-Json Web Token을 커스텀 발행 및 검증하여 관련 카테고리 개발의 시간 비용을 절감하고, 프로젝트의 소스와 설정 파일의 규격을 통일하여 코드의 품질과 가독성 향상하기 위한 목표로 증가 시키기 위한 목표로 추진한다.
+# TokenReference : jwt4j-lite
+
+**jwt4j-lite**는 Java 및 Spring Boot 환경에서 사용할 수 있는 **경량화된 JWT(Json Web Token) 라이브러리**입니다.  
+이 프로젝트는 **io.jsonwebtoken:jjwt-api** 라이브러리를 대체할 수 있는 **JwtProvider** 역할을 수행하며,  
+JWT의 발급과 검증 로직을 커스터마이징할 수 있도록 설계되었습니다.
+
+---
+
+## 🎯 프로젝트 목표
+
+- 🧩 `io.jsonwebtoken:jjwt-*` 라이브러리를 대체 가능한 경량 JWT 엔진 제공  
+- ⚙️ 최소한의 설정으로 커스텀 클레임 발급 및 검증 기능 지원  
+- 🔐 소스와 설정 파일의 규격을 통일하여 코드 품질 및 가독성 향상  
+- 🚀 Spring Boot와 자연스럽게 통합되어 빠른 개발 및 유지보수 가능
+
+---
 
 
-The ultimate goal:
-* Json Web Token 발급에 필요한 라이브러리 <u>`io.jsonwebtoken:jjwt-*` 를 대체 가능</u>하도록 한다.
-* Json Web Token 발급과 검증에 최소한의 정보를 담아 커스텀 사용성을 확장하고, 이를 용이하도록 한다.
 
 # Release
 - [v1.2.0](./RELEASENOTE.md#v100-2025-09-12-) `-ing`
