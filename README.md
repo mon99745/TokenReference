@@ -1,17 +1,18 @@
 # TokenReference : jwt4j-lite
+**jwt4j-lite** — Java 및 Spring Boot 환경에서 사용할 수 있는 **경량화된 JWT(Json Web Token) 라이브러리** 
 
-**jwt4j-lite**는 Java 및 Spring Boot 환경에서 사용할 수 있는 **경량화된 JWT(Json Web Token) 라이브러리**입니다.  
+
+---
+# The Goal
 이 프로젝트는 **io.jsonwebtoken:jjwt-api** 라이브러리를 대체할 수 있는 **JwtProvider** 역할을 수행하며,  
 JWT의 발급과 검증 로직을 커스터마이징할 수 있도록 설계되었습니다.
 
----
+Main Goals:
 
-## 🎯 프로젝트 목표
-
-- 🧩 `io.jsonwebtoken:jjwt-*` 라이브러리를 대체 가능한 경량 JWT 엔진 제공  
-- ⚙️ 최소한의 설정으로 커스텀 클레임 발급 및 검증 기능 지원  
-- 🔐 소스와 설정 파일의 규격을 통일하여 코드 품질 및 가독성 향상  
-- 🚀 Spring Boot와 자연스럽게 통합되어 빠른 개발 및 유지보수 가능
+- `io.jsonwebtoken:jjwt-*` 라이브러리를 대체 가능한 경량 JWT 엔진 제공  
+- 최소한의 설정으로 커스텀 클레임 발급 및 검증 기능 지원  
+- 소스와 설정 파일의 규격을 통일하여 코드 품질 및 가독성 향상  
+- Spring Boot와 자연스럽게 통합되어 빠른 개발 및 유지보수 가능
 
 ---
 
@@ -19,8 +20,8 @@ JWT의 발급과 검증 로직을 커스터마이징할 수 있도록 설계되�
 
 # Release
 - [v1.2.0](./RELEASENOTE.md#v100-2025-09-12-) `-ing`
-- [v1.1.0](./RELEASENOTE.md#v100-2024-04-24-)
-- [v1.0.0](./RELEASENOTE.md#v100-2024-01-30-)
+- [v1.1.0](./RELEASENOTE.md#v100-2024-04-24-) ✅
+- [v1.0.0](./RELEASENOTE.md#v100-2024-01-30-) ✅
 
 # Process
   ![](doc/README_20250121_page-0001.jpg)
@@ -28,14 +29,13 @@ JWT의 발급과 검증 로직을 커스터마이징할 수 있도록 설계되�
   ![](doc/README_20250121_page-0003.jpg)
 
 # Guides
-1. HTTP 통신 방식 (API 호출)
-   1. API 호출 가이드
-   2. API Method List
-   3. API Response Format
-   4. API 상세설명
-      1. 토큰 발행
-      2. 토큰 검증
-      3. 토큰 정보 추출
+1. HTTP Method
+   1. API Method List
+   2. API Response Format
+   3. API Detailed description
+      1. 토큰 발행 / Token Issue
+      2. 토큰 검증 / Token Verify
+      3. 토큰 정보 추출 / Token claim extraction
 
 [//]: # (1. JAR 라이브러리 호출 방식 )
 
@@ -54,11 +54,8 @@ JWT의 발급과 검증 로직을 커스터마이징할 수 있도록 설계되�
 [//]: # (      3. 토큰 정보 추출)
 
 
-## HTTP 통신 방식 (API 호출)
-### 1. API 호출 가이드
-- 해당 프로젝트를 독립적으로 구성하여 HTTP 통신하여 해당 기능을 수행.
-
-### 2. API Method List 
+## HTTP Method 
+### 1. API Method List 
 
 | Method Name | HTTP Method | Description |
 |-------------|-------------|----------|
@@ -67,10 +64,10 @@ JWT의 발급과 검증 로직을 커스터마이징할 수 있도록 설계되�
 | api/v1/extractClaim        | POST        | 토큰 정보 추출 |
 
 
-### 3. API Response Format
+### 2. API Response Format
 | Key        | Value | Description                      |
 |------------|-------|----------------------------------|
-| claim      | Map<String, String>  | 토큰 정보 포함되는 데이터<br/> (토큰 검증 시 제외) |
+| claim      | Map<String, String>  | 토큰 정보 포함되는 데이터<br/> (검증 시 제외) |
 | jwt        | String  | 토큰                               |
 | resultCode | String  | 결과 코드                            |
 | resultMsg  | String  | 결과 메시지                           |
@@ -87,8 +84,8 @@ JWT의 발급과 검증 로직을 커스터마이징할 수 있도록 설계되�
    "resultMsg": "Success"
 }
 ```
-### 4. API 상세설명
-#### a. 토큰 발행
+### 3. API Detailed description
+#### a. 토큰 발행 / Token Issue
 - 사용자의 정보를 통해 토큰을 발행한다.
 - **메소드명 : api/v1/createToken**
 
@@ -117,7 +114,7 @@ JWT의 발급과 검증 로직을 커스터마이징할 수 있도록 설계되�
 }
 ```
 
-#### b. 토큰 검증
+#### b. 토큰 검증 / Token Verify
 - 사용자의 토큰을 검증한다.
 - **메소드명 : api/v1/verifyToken**
 
@@ -138,9 +135,9 @@ JWT의 발급과 검증 로직을 커스터마이징할 수 있도록 설계되�
 }
 ```
 
-#### c. 토큰 정보 추출
+#### c. 토큰 정보 추출 / Token claim extraction
 - 사용자의 토큰을 통해 내부 정보를 추출한다.
-- 해당 토큰은 만료 여부와 관계없이 서명 검증만 통과하면 내부 정보(클레임)을 추출할 수 있다.
+- 해당 토큰은 만료 여부와 관계없이 서명 검증만 통과하면 내부 정보(Claim)을 추출할 수 있다.
 - **메소드명 : api/v1/extractClaim**
 
 | Request Type | Value  | Description |
