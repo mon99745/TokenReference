@@ -1,0 +1,71 @@
+plugins {
+	id 'java'
+	// https://plugins.gradle.org/plugin/com.github.johnrengelman.shadow
+	id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+ext {
+	libName = 'jwt4j.lite'
+	libVersion = version
+}
+
+jar {
+	enabled = true
+	archiveBaseName.set(libName)
+	archiveVersion.set(libVersion)
+
+	dependsOn shadowJar
+}
+
+shadowJar {
+	archiveBaseName.set(libName)
+	archiveVersion.set(libVersion)
+	archiveClassifier.set('')
+	mergeServiceFiles()
+
+	dependencies {
+		include(dependency('org.bitcoinj:bitcoinj-core'))
+		include(dependency('com.google.guava:guava'))
+		include(dependency('org.apache.commons:commons-lang3'))
+	}
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+task sourcesJar(type: Jar) {
+	from sourceSets.main.allSource
+	archiveBaseName.set(libName)
+	archiveVersion.set(libVersion)
+	archiveClassifier.set('sources')
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+	archiveBaseName.set(libName)
+	archiveVersion.set(libVersion)
+	archiveClassifier.set('javadoc')
+}
+
+javadoc {
+	options.encoding = 'UTF-8'
+	options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+artifacts {
+	archives sourcesJar
+	archives javadocJar
+}
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+}
+

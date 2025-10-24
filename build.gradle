@@ -5,8 +5,8 @@ plugins {
 }
 
 allprojects {
-	group = 'com.jsonwebtoken'
-	version = '1.2.1'
+	group = 'io.jwt4j.lite'
+	version = '1.0.0'
 	java {
 		sourceCompatibility = '1.8'
 	}

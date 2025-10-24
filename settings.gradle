@@ -4,7 +4,7 @@ pluginManagement {
     }
 }
 
-rootProject.name = 'JsonWebToken'
+rootProject.name = 'jwt4j-lite'
 
-include 'jsonwebtoken-core'
-include 'jsonwebtoken-app'
+include 'jwt4j-lite-core'
+include 'jwt4j-lite-app'
