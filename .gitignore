@@ -37,8 +37,10 @@ out/
 ### VS Code ###
 .vscode/
 
-### Key ###
+### APP ###
+### Enc/Dec Key ###
 files/
+**/*.pem
 
 ### Doc ###
 ~$**
