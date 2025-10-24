@@ -1,0 +1,25 @@
+plugins {
+    id 'java'
+}
+
+ext {
+    libName = 'jwt4j-lite-app'
+    libVersion = version
+}
+
+bootJar {
+    enabled = true
+    archiveBaseName.set(libName)
+    archiveVersion.set(libVersion)
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'io.springfox:springfox-swagger-ui:3.0.0'
+    implementation 'io.springfox:springfox-boot-starter:3.0.0'
+
+    implementation project(':jwt4j-lite-core')
+}
