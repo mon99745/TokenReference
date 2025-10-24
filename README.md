@@ -19,9 +19,9 @@ Main Goals:
 
 
 # Release
-- [v1.2.0](./RELEASENOTE.md#v100-2025-09-12-) `-ing`
-- [v1.1.0](./RELEASENOTE.md#v100-2024-04-24-) ✅
-- [v1.0.0](./RELEASENOTE.md#v100-2024-01-30-) ✅
+- [v1.0.0](./RELEASENOTE.md#v100-2025-09-12-) ✅
+- [v0.1.2-beta](./RELEASENOTE.md#v100-2024-04-24-) ✅
+- [v0.1.1-beta](./RELEASENOTE.md#v100-2024-01-30-) ✅
 
 # Process
   ![](doc/README_20250121_page-0001.jpg)
