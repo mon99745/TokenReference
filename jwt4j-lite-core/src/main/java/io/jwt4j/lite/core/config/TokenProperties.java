@@ -41,7 +41,22 @@ public class TokenProperties {
 	protected String typ = "JWT";
 
 	/**
-	 * 암호화 알고리즘
+	 * 토큰 만료 시간 (기본: 1시간)
+	 */
+	protected long exp = 60 * 60 * 1000L;
+
+	/**
+	 * 토큰 암호화 알고리즘
 	 */
 	protected String alg = "RSA";
+
+	/**
+	 * 토큰 발급자
+	 */
+	protected String iss = "jwt4j-lite";
+
+	/**
+	 * 토큰 주제
+	 */
+	protected String sub = "jsonwebtoken";
 }

@@ -59,7 +59,7 @@ public class TokenServiceIntegrationTest {
 		when(rsaKeyGenerator.decryptPubRSA(anyString(), anyString())).thenAnswer(i -> i.getArgument(0));
 
 		// -------- JWT 생성 --------
-		Claims claims = TokenUtil.setClaims(claimMap);
+		Claims claims = TokenUtil.setClaims(claimMap, "test-issuer", "test-subject", 600000L);
 		String header = TokenUtil.createHeader(tokenProperties.getTyp(), tokenProperties.getAlg());
 		String payload = TokenUtil.createPayload(claims);
 		String verifyCode = TokenUtil.setVerifyCode(header, payload);
