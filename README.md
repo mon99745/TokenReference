@@ -19,7 +19,7 @@ Main Goals:
 
 
 # Release
-- [v1.0.0](./RELEASENOTE.md#v100-2025-09-12-) ✅
+- [v1.0.0-rc](./RELEASENOTE.md#v100-2025-09-12-) ✅
 - [v0.1.2-beta](./RELEASENOTE.md#v100-2024-04-24-) ✅
 - [v0.1.1-beta](./RELEASENOTE.md#v100-2024-01-30-) ✅
 
