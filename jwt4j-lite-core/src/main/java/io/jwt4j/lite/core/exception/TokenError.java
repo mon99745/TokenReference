@@ -39,9 +39,9 @@ public enum TokenError
 	ENCRYPTION_FAILED(TokenError.CODE_PREFIX + "01-07", "암호화 처리 중 오류가 발생했습니다.", HttpStatus.BAD_REQUEST),
 	DECRYPTION_FAILED(TokenError.CODE_PREFIX + "01-08", "복호화 처리 중 오류가 발생했습니다.", HttpStatus.BAD_REQUEST),
 	UNKNOWN_ENCRYPTION_ERROR(TokenError.CODE_PREFIX + "01-09", "Private 키 암호화 중 알 수 없는 오류가 발생했습니다.", HttpStatus.BAD_REQUEST),
-	UNKNOWN_DECRYPTION_ERROR(TokenError.CODE_PREFIX + "01-10", "Public 키 복호화 중 알 수 없는 오류가 발생했습니다.", HttpStatus.BAD_REQUEST);
-
-	;
+	UNKNOWN_DECRYPTION_ERROR(TokenError.CODE_PREFIX + "01-10", "Public 키 복호화 중 알 수 없는 오류가 발생했습니다.", HttpStatus.BAD_REQUEST),
+	EXPIRED_TOKEN(TokenError.CODE_PREFIX + "01-11", "토큰이 만료되었습니다.", HttpStatus.BAD_REQUEST),
+	INVALID_CLAIM_TIME_FORMAT(TokenError.CODE_PREFIX + "01-12", "Claim 시간 형식이 올바르지 않습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 
 	public static final String CODE_PREFIX = "Token-";
 

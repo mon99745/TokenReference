@@ -65,14 +65,14 @@ public class TokenServiceTest {
 	// -------- setClaims --------
 	@Test
 	public void testSetClaims_NullInput() {
-		assertThrows(TokenException.class, () -> TokenUtil.setClaims(null));
+		assertThrows(TokenException.class, () -> TokenUtil.setClaims(null, "test-issuer", "test-subject", 600000L));
 	}
 
 	@Test
 	public void testSetClaims_ValidInput() {
 		Map<String, String> claimsMap = new HashMap<>();
 		claimsMap.put("user", "test");
-		assertNotNull(TokenUtil.setClaims(claimsMap));
+		assertNotNull(TokenUtil.setClaims(claimsMap, "test-issuer", "test-subject", 600000L));
 	}
 
 	// -------- createHeader --------
@@ -96,7 +96,7 @@ public class TokenServiceTest {
 	public void testCreatePayload_ValidClaims() {
 		Map<String, String> claimsMap = new HashMap<>();
 		claimsMap.put("user", "test");
-		assertNotNull(TokenUtil.createPayload(TokenUtil.setClaims(claimsMap)));
+		assertNotNull(TokenUtil.createPayload(TokenUtil.setClaims(claimsMap,"test-issuer", "test-subject", 600000L)));
 	}
 
 	// -------- setVerifyCode --------
@@ -134,7 +134,7 @@ public class TokenServiceTest {
 	public void testReadClaim_ValidInput() {
 		Map<String, String> claimsMap = new HashMap<>();
 		claimsMap.put("user", "test");
-		String payload = TokenUtil.createPayload(TokenUtil.setClaims(claimsMap));
+		String payload = TokenUtil.createPayload(TokenUtil.setClaims(claimsMap, "test-issuer", "test-subject", 600000L));
 		assertNotNull(TokenUtil.readClaim(payload));
 	}
 

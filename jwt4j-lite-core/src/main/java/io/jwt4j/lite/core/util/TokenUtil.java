@@ -1,37 +1,58 @@
 package io.jwt4j.lite.core.util;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.jwt4j.lite.core.config.RsaKeyGenerator;
 import io.jwt4j.lite.core.exception.TokenError;
 import io.jwt4j.lite.core.exception.TokenException;
 import io.jwt4j.lite.core.model.dto.Token;
 import io.jwt4j.lite.core.model.dto.Claims;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Base58;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
+@Slf4j
 @RequiredArgsConstructor
 public class TokenUtil {
 	protected final RsaKeyGenerator rsaKeyGenerator;
+
 	public static void validateNotEmpty(Object obj, TokenError error) {
 		if (obj == null || (obj instanceof Map && ((Map<?, ?>) obj).isEmpty())
 				|| (obj instanceof String && ((String) obj).isEmpty())) {
 			throw new TokenException(error);
 		}
 	}
-	public static Claims setClaims(Map<String, String> requestClaim) {
+
+	public static Claims setClaims(Map<String, String> requestClaim, String iss, String sub, long defaultTtl) {
 		if (requestClaim == null || requestClaim.isEmpty()) {
 			throw new TokenException(TokenError.MISSING_CLAIM);
+		}
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime exp;
+		if (requestClaim.get("exp") == null || requestClaim.get("exp").isEmpty()) {
+			exp = now.plusSeconds(defaultTtl / 1000);
+		} else {
+			try {
+				long expSeconds = Long.parseLong(requestClaim.get("exp"));
+				exp = now.plusSeconds(expSeconds);
+			} catch (NumberFormatException e) {
+				throw new TokenException(TokenError.INVALID_CLAIM_FORMAT, e);
+			}
 		}
 
 		try {
 			Claims.RegisteredClaim registeredClaim = Claims.RegisteredClaim.builder()
-					.issuer("io-jwt4j-lite") // 발급자
-					.subject("jsonwebtoken") // 주제
-					.expiration("2025-01-31T23:59:59Z") // 만료 시간 (ISO-8601 형식)
-					.issuedAt("2025-01-21T10:00:00Z") // 발급 시간 (ISO-8601 형식)
+					.issuer(iss) // 발급자
+					.subject(sub) // 주제
+					.expiration(String.valueOf(exp)) // 만료 시간 (ISO-8601 형식)
+					.issuedAt(String.valueOf(now)) // 발급 시간 (ISO-8601 형식)
 					.build();
 
 			Claims.PublicClaim publicClaim = Claims.PublicClaim.builder()
@@ -119,5 +140,37 @@ public class TokenUtil {
 		}
 
 		return new Token(splitArray[0], splitArray[1], splitArray[2]);
+	}
+
+	public static boolean isExpiredClaim(Object claims) {
+		try {
+			if (!(claims instanceof ObjectNode)) {
+				throw new TokenException(TokenError.INVALID_CLAIM_TIME_FORMAT);
+			}
+
+			ObjectNode claimsNode = (ObjectNode) claims;
+			JsonNode registeredClaims = claimsNode.get("registeredClaims");
+			if (registeredClaims == null || registeredClaims.get("expiration") == null) {
+				throw new TokenException(TokenError.INVALID_CLAIM_TIME_FORMAT);
+			}
+
+			String expStr = registeredClaims.get("expiration").asText();
+
+			// 1️⃣ 밀리초 숫자 문자열이면 Instant 사용
+			try {
+				long expMillis = Long.parseLong(expStr);
+				Instant expirationTime = Instant.ofEpochMilli(expMillis);
+				return Instant.now().isAfter(expirationTime);
+			} catch (NumberFormatException ignored) {
+				// 2️⃣ ISO 8601 문자열이면 LocalDateTime 사용
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
+				LocalDateTime expirationTime = LocalDateTime.parse(expStr, formatter);
+				return LocalDateTime.now().isAfter(expirationTime);
+			}
+
+		} catch (Exception e) {
+			if (e instanceof TokenException) throw (TokenException) e;
+			throw new TokenException(TokenError.INVALID_CLAIM_TIME_FORMAT, e);
+		}
 	}
 }

@@ -35,7 +35,8 @@ public class TokenService {
 	public CreateTokenResponse createJwt(Map<String, String> requestClaim) {
 		TokenUtil.validateNotEmpty(requestClaim, TokenError.MISSING_CLAIM);
 		try {
-			return this.createJwt(TokenUtil.setClaims(requestClaim));
+			return this.createJwt(TokenUtil.setClaims(requestClaim,
+					tokenProperties.getIss(), tokenProperties.getSub(), tokenProperties.getExp()));
 		} catch (TokenException e) {
 			throw e;
 		} catch (IllegalArgumentException e) {
@@ -111,6 +112,11 @@ public class TokenService {
 			/** 위변조 검증(해시 비교) */
 			if (!MessageDigest.isEqual(newVerifyCode.getBytes(), signedVerifyCode.getBytes())) {
 				throw new TokenException(TokenError.INVALID_TOKEN);
+			}
+			/** 만료 검증 */
+			Object claims = TokenUtil.readClaim(tokenObject.getPayload());
+			if (TokenUtil.isExpiredClaim(claims)) {
+				throw new TokenException(TokenError.EXPIRED_TOKEN);
 			}
 
 			return VerifyTokenResponse.builder()
