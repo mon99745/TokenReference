@@ -31,11 +31,22 @@ Main Goals:
 # Guides
 1. HTTP Method
    1. API Method List
-   2. API Response Format
-   3. API Detailed description
+   2. API Detailed description
       1. 토큰 발행 / Token Issue
       2. 토큰 검증 / Token Verify
       3. 토큰 정보 추출 / Token claim extraction
+     
+2. Direct Method
+   1. Installation
+   2. Usage Example
+      1. 토큰 발행 / Token Issue
+      2. 토큰 검증 / Token Verify
+      3. 토큰 정보 추출 / Token claim extraction
+
+3. Response Format
+    1. 토큰 발행 / Token Issue
+    2. 토큰 검증 / Token Verify
+    3. 토큰 정보 추출 / Token claim extraction
 
 [//]: # (1. JAR 라이브러리 호출 방식 )
 
@@ -63,26 +74,6 @@ Main Goals:
 | api/v1/verifyToken        | POST        | 토큰 검증    |
 | api/v1/extractClaim        | POST        | 토큰 정보 추출 |
 
-
-### 2. API Response Format
-| Key        | Value | Description                      |
-|------------|-------|----------------------------------|
-| claim      | Map<String, String>  | 토큰 정보 포함되는 데이터<br/> (검증 시 제외) |
-| jwt        | String  | 토큰                               |
-| resultCode | String  | 결과 코드                            |
-| resultMsg  | String  | 결과 메시지                           |
-```json
-{
-   "claim": {
-      "ci": "12345678",
-      "role": "user",
-      "username": "test_user",
-      "password": "[VK+SJA26vJFCuDL/kPYAQ073GZTmTOpAbi5izZ10AFx3NlDDW6brVoBOeFlfA5hxHeOQw+Pz+M/XN.."
-   },
-   "jwt": "e29JzDyi.mwVQotk9DFqLwPpLw8TutiwiX6x4XQUrYtngFyoC7VPVs1txq54NGuzWbHt12rGbA6nnetYSnAinJRpVRzjyXj3GogWjwb2FMeYPshrZFhpaVvJFy2g39FcNusGHoHH5uBcmdEvme6g2crSuNKXbtsaREbakFtGu4oCk7CuVvz1XoAoc43Lc1hAbdU2VReEF7wxsKYQQLk.Ou+L/qyvpu8ssLpZ+qtDOYRQvHEcT/Qvq86KPapmXugS3SvZPnTnZdjzAB+Kcfd+bZX+OjXMBprUQHId25oD5OVK9XVq+3p839qpiJrbdYx6jWG7R5FhlQzQsH2CZezizUEkUlpc5Q38CNN3eJEZAOkO0TXhyMSyUkKyrMVDdVcLdJEzEXTVhwIICfG/+JCziI7/ijqBfSlGE4yB+14tfV2Ks2LdjfXf65zphz1Wm43oP2jzPFvreKta1twUKvhzKLAiYsxMD+kuL14zOJvYQJlnGozZG4rJT8qZUEVMglbCuoeqmXzmAUSGOcg6uaIN2/uPFT4oOgkmAkC5bvKw2g==",
-   "resultCode": "200",
-   "resultMsg": "Success"
-}
 ```
 ### 3. API Detailed description
 #### a. 토큰 발행 / Token Issue
@@ -157,3 +148,116 @@ Main Goals:
 }
 ```
 
+## Direct Method 
+### 1. Installation
+``` 
+// Gradle
+implementation 'jwt4j-lite-*.jar'
+```
+### 2. Usage Example
+``` java
+import java.util.HashMap;
+import java.util.Map;
+
+public class JwtExample {
+    public static void main(String[] args) {
+        // ========================
+        // 1. Create JWT
+        // ========================
+        Map<String, String> claims = new HashMap<>();
+        claims.put("userId", "user123");
+        claims.put("role", "ADMIN");
+
+        try {
+            CreateTokenResponse createResponse = tokenService.createJwt(claims);
+            String jwtToken = createResponse.getJwt();
+            System.out.println("Generated JWT: " + jwtToken);
+
+            // ========================
+            // 2. Verify JWT
+            // ========================
+            VerifyTokenResponse verifyResponse = tokenService.verifyJwt(jwtToken);
+            System.out.println("Verification result: " + verifyResponse.getResultMsg());
+
+            // ========================
+            // 3. Extract Claims
+            // ========================
+            ExtractClaimResponse claimResponse = tokenService.extractClaimToJwt(jwtToken);
+            System.out.println("Extracted Claims: " + claimResponse.getClaims());
+
+        } catch (TokenException e) {
+            System.err.println("Token error: " + e.getErrorCode() + " - " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+
+
+## 3. Response Format
+### 1. 토큰 발행 / Token Issue
+| Key        | Value | Description                      |
+|------------|-------|----------------------------------|
+| claim      | Map<String, String>  | 토큰 정보 포함되는 데이터|
+| jwt        | String  | 토큰                               |
+| resultCode | String  | 결과 코드                            |
+| resultMsg  | String  | 결과 메시지                           |
+
+```json
+{
+   "claim": {
+      "ci": "12345678",
+      "role": "user",
+      "username": "test_user",
+      "password": "[VK+SJA26vJFCuDL/kPYAQ073GZTmTOpAbi5izZ10AFx3NlDDW6brVoBOeFlfA5hxHeOQw+Pz+M/XN.."
+   },
+   "jwt": "e29JzDyi.mwVQotk9DFqLwPpLw8TutiwiX6x4XQUrYtngFyoC7VPVs1txq54NGuzWbHt12rGbA6nnetYSnAinJRpVRzjyXj3GogWjwb2FMeYPshrZFhpaVvJFy2g39FcNusGHoHH5uBcmdEvme6g2crSuNKXbtsaREbakFtGu4oCk7CuVvz1XoAoc43Lc1hAbdU2VReEF7wxsKYQQLk.Ou+L/qyvpu8ssLpZ+qtDOYRQvHEcT/Qvq86KPapmXugS3SvZPnTnZdjzAB+Kcfd+bZX+OjXMBprUQHId25oD5OVK9XVq+3p839qpiJrbdYx6jWG7R5FhlQzQsH2CZezizUEkUlpc5Q38CNN3eJEZAOkO0TXhyMSyUkKyrMVDdVcLdJEzEXTVhwIICfG/+JCziI7/ijqBfSlGE4yB+14tfV2Ks2LdjfXf65zphz1Wm43oP2jzPFvreKta1twUKvhzKLAiYsxMD+kuL14zOJvYQJlnGozZG4rJT8qZUEVMglbCuoeqmXzmAUSGOcg6uaIN2/uPFT4oOgkmAkC5bvKw2g==",
+   "resultCode": "200",
+   "resultMsg": "Success"
+}
+```
+
+### 2. 토큰 검증 / Token Verify
+| Key        | Value | Description                      |
+|------------|-------|----------------------------------|
+| claim      | Map<String, String>  | 토큰 정보 포함되는 데이터|
+| jwt        | String  | 토큰                               |
+| resultCode | String  | 결과 코드                            |
+| resultMsg  | String  | 결과 메시지                           |
+
+```json
+{
+   "claim": {
+      "ci": "12345678",
+      "role": "user",
+      "username": "test_user",
+      "password": "[VK+SJA26vJFCuDL/kPYAQ073GZTmTOpAbi5izZ10AFx3NlDDW6brVoBOeFlfA5hxHeOQw+Pz+M/XN.."
+   },
+   "jwt": "e29JzDyi.mwVQotk9DFqLwPpLw8TutiwiX6x4XQUrYtngFyoC7VPVs1txq54NGuzWbHt12rGbA6nnetYSnAinJRpVRzjyXj3GogWjwb2FMeYPshrZFhpaVvJFy2g39FcNusGHoHH5uBcmdEvme6g2crSuNKXbtsaREbakFtGu4oCk7CuVvz1XoAoc43Lc1hAbdU2VReEF7wxsKYQQLk.Ou+L/qyvpu8ssLpZ+qtDOYRQvHEcT/Qvq86KPapmXugS3SvZPnTnZdjzAB+Kcfd+bZX+OjXMBprUQHId25oD5OVK9XVq+3p839qpiJrbdYx6jWG7R5FhlQzQsH2CZezizUEkUlpc5Q38CNN3eJEZAOkO0TXhyMSyUkKyrMVDdVcLdJEzEXTVhwIICfG/+JCziI7/ijqBfSlGE4yB+14tfV2Ks2LdjfXf65zphz1Wm43oP2jzPFvreKta1twUKvhzKLAiYsxMD+kuL14zOJvYQJlnGozZG4rJT8qZUEVMglbCuoeqmXzmAUSGOcg6uaIN2/uPFT4oOgkmAkC5bvKw2g==",
+   "resultCode": "200",
+   "resultMsg": "Success"
+}
+```
+
+### 3. 토큰 정보 추출 / Token claim extraction
+| Key        | Value | Description                      |
+|------------|-------|----------------------------------|
+| jwt        | String  | 토큰                               |
+| resultCode | String  | 결과 코드                            |
+| resultMsg  | String  | 결과 메시지                           |
+
+```json
+{
+   "claim": {
+      "ci": "12345678",
+      "role": "user",
+      "username": "test_user",
+      "password": "[VK+SJA26vJFCuDL/kPYAQ073GZTmTOpAbi5izZ10AFx3NlDDW6brVoBOeFlfA5hxHeOQw+Pz+M/XN.."
+   },
+   "jwt": "e29JzDyi.mwVQotk9DFqLwPpLw8TutiwiX6x4XQUrYtngFyoC7VPVs1txq54NGuzWbHt12rGbA6nnetYSnAinJRpVRzjyXj3GogWjwb2FMeYPshrZFhpaVvJFy2g39FcNusGHoHH5uBcmdEvme6g2crSuNKXbtsaREbakFtGu4oCk7CuVvz1XoAoc43Lc1hAbdU2VReEF7wxsKYQQLk.Ou+L/qyvpu8ssLpZ+qtDOYRQvHEcT/Qvq86KPapmXugS3SvZPnTnZdjzAB+Kcfd+bZX+OjXMBprUQHId25oD5OVK9XVq+3p839qpiJrbdYx6jWG7R5FhlQzQsH2CZezizUEkUlpc5Q38CNN3eJEZAOkO0TXhyMSyUkKyrMVDdVcLdJEzEXTVhwIICfG/+JCziI7/ijqBfSlGE4yB+14tfV2Ks2LdjfXf65zphz1Wm43oP2jzPFvreKta1twUKvhzKLAiYsxMD+kuL14zOJvYQJlnGozZG4rJT8qZUEVMglbCuoeqmXzmAUSGOcg6uaIN2/uPFT4oOgkmAkC5bvKw2g==",
+   "resultCode": "200",
+   "resultMsg": "Success"
+}
+```
