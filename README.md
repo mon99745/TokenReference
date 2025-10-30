@@ -74,7 +74,6 @@ Main Goals:
 | api/v1/verifyToken        | POST        | 토큰 검증    |
 | api/v1/extractClaim        | POST        | 토큰 정보 추출 |
 
-```
 ### 3. API Detailed description
 #### a. 토큰 발행 / Token Issue
 - 사용자의 정보를 통해 토큰을 발행한다.
