@@ -46,6 +46,9 @@ import org.springframework.stereotype.Component;
 public class RsaKeyGenerator implements InitializingBean {
 	protected final TokenProperties tokenProperties;
 
+	private String PUBLIC_KEY_NAME = "public.pem";
+	private String PRIVATE_KEY_NAME = "private.pem";
+
 	@Override
 	public void afterPropertiesSet() {
 		try {
@@ -68,8 +71,8 @@ public class RsaKeyGenerator implements InitializingBean {
 		if (!folder.exists()) return false;
 
 		String[] files = {
-				tokenProperties.getPath() + "public.pem",
-				tokenProperties.getPath() + "private.pem"
+				tokenProperties.getPath() + PUBLIC_KEY_NAME,
+				tokenProperties.getPath() + PRIVATE_KEY_NAME
 		};
 		for (String f : files) {
 			File file = new File(f);
@@ -95,8 +98,8 @@ public class RsaKeyGenerator implements InitializingBean {
 		}
 
 		Map<String, byte[]> keys = new LinkedHashMap<>();
-		keys.put("public.pem", keyPair.getPublic().getEncoded());
-		keys.put("private.pem", keyPair.getPrivate().getEncoded());
+		keys.put(PUBLIC_KEY_NAME, keyPair.getPublic().getEncoded());
+		keys.put(PRIVATE_KEY_NAME, keyPair.getPrivate().getEncoded());
 
 		for (Map.Entry<String, byte[]> entry : keys.entrySet()) {
 			File file = new File(folder, entry.getKey());
@@ -154,7 +157,7 @@ public class RsaKeyGenerator implements InitializingBean {
 		if (!keyFileCheck()) {
 			createKeyFile();
 		}
-		byte[] bytes = Files.readAllBytes(Paths.get(tokenProperties.getPath() + "private.pem"));
+		byte[] bytes = Files.readAllBytes(Paths.get(tokenProperties.getPath() + PRIVATE_KEY_NAME));
 		bytes = Base58.decode(new String(bytes, StandardCharsets.UTF_8));
 		PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(bytes);
 		KeyFactory keyFactory = KeyFactory.getInstance(tokenProperties.getAlg());
@@ -169,41 +172,12 @@ public class RsaKeyGenerator implements InitializingBean {
 		if (!keyFileCheck()) {
 			createKeyFile();
 		}
-		byte[] bytes = Files.readAllBytes(Paths.get(tokenProperties.getPath() + "public.pem"));
+		byte[] bytes = Files.readAllBytes(Paths.get(tokenProperties.getPath() + PUBLIC_KEY_NAME));
 		bytes = Base58.decode(new String(bytes, StandardCharsets.UTF_8));
 		X509EncodedKeySpec spec = new X509EncodedKeySpec(bytes);
 		KeyFactory keyFactory = KeyFactory.getInstance(tokenProperties.getAlg());
 		PublicKey pk = keyFactory.generatePublic(spec);
 		return pk;
-	}
-
-	/**
-	 * public 키로 암호화
-	 */
-	public String encryptPubRSA(String plainText, String publicKey) throws NoSuchAlgorithmException,
-			InvalidKeySpecException, InvalidKeyException, NoSuchPaddingException,
-			IllegalBlockSizeException, BadPaddingException {
-		PublicKey pubKey = getPublicKey(publicKey);
-		Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-		cipher.init(Cipher.ENCRYPT_MODE, pubKey);
-		byte[] bytePlain = cipher.doFinal(plainText.getBytes());
-		String encrypted = Base64.getEncoder().encodeToString(bytePlain);
-		return encrypted;
-	}
-
-	/**
-	 * private 키로 복호화
-	 */
-	public String decryptPrvRSA(String encrypted, String privateKey) throws NoSuchAlgorithmException,
-			InvalidKeySpecException, IOException, InvalidKeyException, NoSuchPaddingException,
-			IllegalBlockSizeException, BadPaddingException {
-		PrivateKey prvKey = getPrivateKey(privateKey);
-		Cipher cipher2 = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-		byte[] byteEncrypted = Base64.getDecoder().decode(encrypted.getBytes());
-		cipher2.init(Cipher.DECRYPT_MODE, prvKey);
-		byte[] bytePlain = cipher2.doFinal(byteEncrypted);
-		String decrypted = new String(bytePlain, StandardCharsets.UTF_8);
-		return decrypted;
 	}
 
 	/**
@@ -228,7 +202,7 @@ public class RsaKeyGenerator implements InitializingBean {
 		} catch (IllegalBlockSizeException | BadPaddingException e) {
 			throw new TokenException(TokenError.ENCRYPTION_FAILED);
 		} catch (Exception e) {
-			throw new TokenException(TokenError.UNKNOWN_ENCRYPTION_ERROR);
+			throw new TokenException(TokenError.INVALID_TOKEN);
 		}
 	}
 
@@ -255,7 +229,7 @@ public class RsaKeyGenerator implements InitializingBean {
 		} catch (IllegalBlockSizeException | BadPaddingException e) {
 			throw new TokenException(TokenError.DECRYPTION_FAILED);
 		} catch (Exception e) {
-			throw new TokenException(TokenError.UNKNOWN_DECRYPTION_ERROR);
+			throw new TokenException(TokenError.INVALID_TOKEN);
 		}
 	}
 }

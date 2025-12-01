@@ -10,10 +10,12 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
+import static io.jwt4j.lite.core.config.TokenProperties.PROPERTY_PREFIX;
+
 @Slf4j
 @Component
 public class SpringUtil {
-	public static final String SPRING_CONFIG_NAME = "spring.config.name";
+	public static final String SPRING_CONFIG_NAME = PROPERTY_PREFIX;
 	private static final ExpressionParser EXPRESSION_PARSER = new SpelExpressionParser();
 
 	@Setter

@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 import io.jwt4j.lite.core.exception.common.Error;
 
 @Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor(access = AccessLevel.PUBLIC)
 public enum TokenError
 		implements Error {
 
@@ -29,7 +29,7 @@ public enum TokenError
 	JWT_CREATION_FAILED(TokenError.CODE_PREFIX + "02-03", "JWT 생성 중 시스템 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
 	FAILED_ENCRYPT(TokenError.CODE_PREFIX + "02-03", "Failed to encrypt", HttpStatus.INTERNAL_SERVER_ERROR),
 
-	// RSA 관련 에러 정의
+	// RSA
 	RSA_ALGORITHM_NOT_FOUND(TokenError.CODE_PREFIX + "01-01", "RSA 알고리즘을 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
 	INVALID_PRIVATE_KEY_SPEC(TokenError.CODE_PREFIX + "01-02", "잘못된 Private Key 형식입니다.", HttpStatus.BAD_REQUEST),
 	INVALID_PRIVATE_KEY(TokenError.CODE_PREFIX + "01-03", "Private Key가 유효하지 않습니다.", HttpStatus.BAD_REQUEST),
@@ -38,12 +38,12 @@ public enum TokenError
 	INVALID_PADDING(TokenError.CODE_PREFIX + "01-06", "RSA 패딩 설정이 잘못되었습니다.", HttpStatus.BAD_REQUEST),
 	ENCRYPTION_FAILED(TokenError.CODE_PREFIX + "01-07", "암호화 처리 중 오류가 발생했습니다.", HttpStatus.BAD_REQUEST),
 	DECRYPTION_FAILED(TokenError.CODE_PREFIX + "01-08", "복호화 처리 중 오류가 발생했습니다.", HttpStatus.BAD_REQUEST),
-	UNKNOWN_ENCRYPTION_ERROR(TokenError.CODE_PREFIX + "01-09", "Private 키 암호화 중 알 수 없는 오류가 발생했습니다.", HttpStatus.BAD_REQUEST),
-	UNKNOWN_DECRYPTION_ERROR(TokenError.CODE_PREFIX + "01-10", "Public 키 복호화 중 알 수 없는 오류가 발생했습니다.", HttpStatus.BAD_REQUEST),
+	UNKNOWN_ENCRYPTION_ERROR(TokenError.CODE_PREFIX + "01-09", "Private 키 암호화 중 알 수 없는 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+	UNKNOWN_DECRYPTION_ERROR(TokenError.CODE_PREFIX + "01-10", "Public 키 복호화 중 알 수 없는 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
 	EXPIRED_TOKEN(TokenError.CODE_PREFIX + "01-11", "토큰이 만료되었습니다.", HttpStatus.BAD_REQUEST),
 	INVALID_CLAIM_TIME_FORMAT(TokenError.CODE_PREFIX + "01-12", "Claim 시간 형식이 올바르지 않습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 
-	public static final String CODE_PREFIX = "Token-";
+	public static final String CODE_PREFIX = "token-";
 
 	private final String code;
 	private final String message;

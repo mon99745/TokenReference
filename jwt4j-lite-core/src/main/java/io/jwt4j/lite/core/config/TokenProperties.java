@@ -17,7 +17,7 @@ public class TokenProperties {
 	/**
 	 * 설정 타이틀
 	 */
-	public static final String PROPERTY_PREFIX = "jwt";
+	public static final String PROPERTY_PREFIX = "token.info";
 
 	/**
 	 * 설정 정보
@@ -38,7 +38,7 @@ public class TokenProperties {
 	/**
 	 * 토큰 타입
 	 */
-	protected String typ = "JWT";
+	protected String typ = "jsonwebtoken";
 
 	/**
 	 * 토큰 만료 시간 (기본: 1시간)
@@ -53,10 +53,10 @@ public class TokenProperties {
 	/**
 	 * 토큰 발급자
 	 */
-	protected String iss = "jwt4j-lite";
+	protected String iss = "jwt4j-core";
 
 	/**
 	 * 토큰 주제
 	 */
-	protected String sub = "jsonwebtoken";
+	protected String sub = "jwt4j-lite";
 }

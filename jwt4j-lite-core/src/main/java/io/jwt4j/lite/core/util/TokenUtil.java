@@ -156,13 +156,13 @@ public class TokenUtil {
 
 			String expStr = registeredClaims.get("expiration").asText();
 
-			// 1️⃣ 밀리초 숫자 문자열이면 Instant 사용
+			// 밀리초 숫자 문자열이면 Instant 사용
 			try {
 				long expMillis = Long.parseLong(expStr);
 				Instant expirationTime = Instant.ofEpochMilli(expMillis);
 				return Instant.now().isAfter(expirationTime);
 			} catch (NumberFormatException ignored) {
-				// 2️⃣ ISO 8601 문자열이면 LocalDateTime 사용
+				// ISO 8601 문자열이면 LocalDateTime 사용
 				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
 				LocalDateTime expirationTime = LocalDateTime.parse(expStr, formatter);
 				return LocalDateTime.now().isAfter(expirationTime);
