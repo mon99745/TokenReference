@@ -22,6 +22,14 @@ import java.util.Map;
 public class KeyPairService {
 	protected final RsaKeyGenerator rsaKeyGenerator;
 
+	protected String getPrivateKey() {
+		return Base58.encode(rsaKeyGenerator.getPrivateKey().getEncoded());
+	}
+
+	protected String getPublicKey() {
+		return Base58.encode(rsaKeyGenerator.getPublicKey().getEncoded());
+	}
+
 	/**
 	 * 키페어 생성
 	 *
@@ -63,22 +71,6 @@ public class KeyPairService {
 			return strKeymap;
 		} catch (Exception e) {
 			throw new TokenException(TokenError.BASE58_ENCODING_FAILED, e);
-		}
-	}
-
-	protected String getPrivateKey() {
-		try {
-			return Base58.encode(rsaKeyGenerator.getPrivateKey().getEncoded());
-		} catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
-			throw new TokenException(TokenError.FAILED_ENCRYPT, e);
-		}
-	}
-
-	protected String getPublicKey() {
-		try {
-			return Base58.encode(rsaKeyGenerator.getPublicKey().getEncoded());
-		} catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
-			throw new TokenException(TokenError.FAILED_ENCRYPT, e);
 		}
 	}
 }

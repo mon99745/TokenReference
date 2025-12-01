@@ -51,15 +51,11 @@ public class RsaKeyGenerator implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() {
-		try {
-			if (!keyFileCheck()) {
-				log.info("Generate RSA keys");
-				createKeyFile();
-			} else {
-				log.info("RSA keys already exists and uses it.");
-			}
-		} catch (NoSuchAlgorithmException | IOException e) {
-			throw new IllegalStateException("RSA key initialization failed", e);
+		if (!keyFileCheck()) {
+			log.info("Generate RSA keys");
+			createKeyFile();
+		} else {
+			log.info("RSA keys already exists and uses it.");
 		}
 	}
 
@@ -74,6 +70,7 @@ public class RsaKeyGenerator implements InitializingBean {
 				tokenProperties.getPath() + PUBLIC_KEY_NAME,
 				tokenProperties.getPath() + PRIVATE_KEY_NAME
 		};
+
 		for (String f : files) {
 			File file = new File(f);
 			if (!file.exists()) return false;
@@ -84,29 +81,33 @@ public class RsaKeyGenerator implements InitializingBean {
 	/**
 	 * 키 파일을 생성하는 메소드, 무조건 파일을 모두 새로 생성
 	 */
-	private void createKeyFile() throws IOException, NoSuchAlgorithmException {
-		KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(tokenProperties.getAlg());
-		keyPairGenerator.initialize(tokenProperties.getKeySize());
-		KeyPair keyPair = keyPairGenerator.genKeyPair();
+	private void createKeyFile() {
+		try {
+			KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(tokenProperties.getAlg());
+			keyPairGenerator.initialize(tokenProperties.getKeySize());
+			KeyPair keyPair = keyPairGenerator.genKeyPair();
 
-		File folder = new File(tokenProperties.getPath());
-		if (!folder.exists()) folder.mkdirs();
+			File folder = new File(tokenProperties.getPath());
+			if (!folder.exists()) folder.mkdirs();
 
-		File[] files = folder.listFiles();
-		if (files != null) {
-			for (File f : files) f.delete();
-		}
-
-		Map<String, byte[]> keys = new LinkedHashMap<>();
-		keys.put(PUBLIC_KEY_NAME, keyPair.getPublic().getEncoded());
-		keys.put(PRIVATE_KEY_NAME, keyPair.getPrivate().getEncoded());
-
-		for (Map.Entry<String, byte[]> entry : keys.entrySet()) {
-			File file = new File(folder, entry.getKey());
-			try (FileOutputStream fos = new FileOutputStream(file)) {
-				fos.write(Base58.encode(entry.getValue()).getBytes(StandardCharsets.UTF_8));
+			File[] files = folder.listFiles();
+			if (files != null) {
+				for (File f : files) f.delete();
 			}
-			log.info("{} has been created.", entry.getKey());
+
+			Map<String, byte[]> keys = new LinkedHashMap<>();
+			keys.put(PUBLIC_KEY_NAME, keyPair.getPublic().getEncoded());
+			keys.put(PRIVATE_KEY_NAME, keyPair.getPrivate().getEncoded());
+
+			for (Map.Entry<String, byte[]> entry : keys.entrySet()) {
+				File file = new File(folder, entry.getKey());
+				try (FileOutputStream fos = new FileOutputStream(file)) {
+					fos.write(Base58.encode(entry.getValue()).getBytes(StandardCharsets.UTF_8));
+				}
+				log.info("{} has been created.", entry.getKey());
+			}
+		} catch (NoSuchAlgorithmException | IOException e) {
+			throw new TokenException(TokenError.KEY_GENERATION_FAILED, e);
 		}
 	}
 
@@ -122,7 +123,7 @@ public class RsaKeyGenerator implements InitializingBean {
 			keyMap.put("PublicKey", keyPair.getPublic());
 			keyMap.put("PrivateKey", keyPair.getPrivate());
 		} catch (NoSuchAlgorithmException e) {
-			log.error("KeyPair generation failed", e);
+			throw new TokenException(TokenError.RSA_ALGORITHM_NOT_FOUND, e);
 		}
 		return keyMap;
 	}
@@ -131,53 +132,93 @@ public class RsaKeyGenerator implements InitializingBean {
 	/**
 	 * 키를 받아 복호화헤서 리턴하는 메소드
 	 */
-	public PrivateKey getPrivateKey(String privateKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
-		byte[] bytes = Base58.decode(privateKey);
-		PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(bytes);
-		KeyFactory keyFactory = KeyFactory.getInstance(tokenProperties.getAlg());
-		PrivateKey pk = keyFactory.generatePrivate(spec);
-		return pk;
+	public PrivateKey getPrivateKey(String privateKey) {
+		try {
+			byte[] decoded = Base58.decode(privateKey);
+			PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(decoded);
+			return KeyFactory.getInstance(tokenProperties.getAlg())
+					.generatePrivate(spec);
+
+		} catch (IllegalArgumentException e) {
+			throw new TokenException(TokenError.INVALID_KEY_INPUT, e);
+
+		} catch (NoSuchAlgorithmException e) {
+			throw new TokenException(TokenError.RSA_ALGORITHM_NOT_FOUND, e);
+
+		} catch (InvalidKeySpecException e) {
+			throw new TokenException(TokenError.INVALID_PRIVATE_KEY_SPEC, e);
+		}
 	}
 
 	/**
 	 * 키를 받아 복호화헤서 리턴하는 메소드
 	 */
-	public PublicKey getPublicKey(String publicKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
-		byte[] bytes = Base58.decode(publicKey);
-		X509EncodedKeySpec spec = new X509EncodedKeySpec(bytes);
-		KeyFactory keyFactory = KeyFactory.getInstance(tokenProperties.getAlg());
-		PublicKey pk = keyFactory.generatePublic(spec);
-		return pk;
+	public PublicKey getPublicKey(String publicKey) {
+		try {
+			byte[] decoded = Base58.decode(publicKey);
+			X509EncodedKeySpec spec = new X509EncodedKeySpec(decoded);
+			return KeyFactory.getInstance(tokenProperties.getAlg())
+					.generatePublic(spec);
+
+		} catch (IllegalArgumentException e) {
+			throw new TokenException(TokenError.INVALID_KEY_INPUT, e);
+
+		} catch (NoSuchAlgorithmException e) {
+			throw new TokenException(TokenError.RSA_ALGORITHM_NOT_FOUND, e);
+
+		} catch (InvalidKeySpecException e) {
+			throw new TokenException(TokenError.INVALID_PUBLIC_KEY_SPEC, e);
+		}
 	}
 
 	/**
 	 * 키 파일을 읽어 리턴하는 메소드, 없을 경우 새로 생성 (for serverKey)
 	 */
-	public PrivateKey getPrivateKey() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-		if (!keyFileCheck()) {
-			createKeyFile();
+	public PrivateKey getPrivateKey() {
+		try {
+			if (!keyFileCheck()) createKeyFile();
+
+			byte[] encoded = Files.readAllBytes(Paths.get(tokenProperties.getPath() + PRIVATE_KEY_NAME));
+			byte[] decoded = Base58.decode(new String(encoded, StandardCharsets.UTF_8));
+
+			PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(decoded);
+			return KeyFactory.getInstance(tokenProperties.getAlg())
+					.generatePrivate(spec);
+
+		} catch (IOException e) {
+			throw new TokenException(TokenError.PRIVATE_KEY_LOAD_FAILED, e);
+
+		} catch (NoSuchAlgorithmException e) {
+			throw new TokenException(TokenError.RSA_ALGORITHM_NOT_FOUND, e);
+
+		} catch (InvalidKeySpecException e) {
+			throw new TokenException(TokenError.INVALID_PRIVATE_KEY_SPEC, e);
 		}
-		byte[] bytes = Files.readAllBytes(Paths.get(tokenProperties.getPath() + PRIVATE_KEY_NAME));
-		bytes = Base58.decode(new String(bytes, StandardCharsets.UTF_8));
-		PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(bytes);
-		KeyFactory keyFactory = KeyFactory.getInstance(tokenProperties.getAlg());
-		PrivateKey pk = keyFactory.generatePrivate(spec);
-		return pk;
 	}
 
 	/**
 	 * 키 파일을 읽어 리턴하는 메소드, 없을 경우 새로 생성 (for serverKey)
 	 */
-	public PublicKey getPublicKey() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-		if (!keyFileCheck()) {
-			createKeyFile();
+	public PublicKey getPublicKey() {
+		try {
+			if (!keyFileCheck()) createKeyFile();
+
+			byte[] encoded = Files.readAllBytes(Paths.get(tokenProperties.getPath() + PUBLIC_KEY_NAME));
+			byte[] decoded = Base58.decode(new String(encoded, StandardCharsets.UTF_8));
+
+			X509EncodedKeySpec spec = new X509EncodedKeySpec(decoded);
+			return KeyFactory.getInstance(tokenProperties.getAlg())
+					.generatePublic(spec);
+
+		} catch (IOException e) {
+			throw new TokenException(TokenError.PUBLIC_KEY_LOAD_FAILED, e);
+
+		} catch (NoSuchAlgorithmException e) {
+			throw new TokenException(TokenError.RSA_ALGORITHM_NOT_FOUND, e);
+
+		} catch (InvalidKeySpecException e) {
+			throw new TokenException(TokenError.INVALID_PUBLIC_KEY_SPEC, e);
 		}
-		byte[] bytes = Files.readAllBytes(Paths.get(tokenProperties.getPath() + PUBLIC_KEY_NAME));
-		bytes = Base58.decode(new String(bytes, StandardCharsets.UTF_8));
-		X509EncodedKeySpec spec = new X509EncodedKeySpec(bytes);
-		KeyFactory keyFactory = KeyFactory.getInstance(tokenProperties.getAlg());
-		PublicKey pk = keyFactory.generatePublic(spec);
-		return pk;
 	}
 
 	/**
@@ -186,23 +227,21 @@ public class RsaKeyGenerator implements InitializingBean {
 	public String encryptPrvRSA(String plainText, String privateKey) {
 		try {
 			PrivateKey prvKey = getPrivateKey(privateKey);
+
 			Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 			cipher.init(Cipher.ENCRYPT_MODE, prvKey);
 			byte[] bytePlain = cipher.doFinal(plainText.getBytes());
-			String encrypted = Base64.getEncoder().encodeToString(bytePlain);
-			return encrypted;
-		} catch (NoSuchAlgorithmException e) {
-			throw new TokenException(TokenError.RSA_ALGORITHM_NOT_FOUND);
-		} catch (InvalidKeySpecException e) {
-			throw new TokenException(TokenError.INVALID_PRIVATE_KEY_SPEC);
+
+			return Base64.getEncoder().encodeToString(bytePlain);
+
 		} catch (InvalidKeyException e) {
-			throw new TokenException(TokenError.INVALID_PRIVATE_KEY);
-		} catch (NoSuchPaddingException e) {
-			throw new TokenException(TokenError.INVALID_PADDING);
-		} catch (IllegalBlockSizeException | BadPaddingException e) {
-			throw new TokenException(TokenError.ENCRYPTION_FAILED);
-		} catch (Exception e) {
-			throw new TokenException(TokenError.INVALID_TOKEN);
+			throw new TokenException(TokenError.INVALID_PRIVATE_KEY, e);
+
+		} catch (BadPaddingException | IllegalBlockSizeException e) {
+			throw new TokenException(TokenError.ENCRYPTION_FAILED, e);
+
+		} catch (NoSuchPaddingException | NoSuchAlgorithmException e) {
+			throw new TokenException(TokenError.RSA_ALGORITHM_NOT_FOUND, e);
 		}
 	}
 
@@ -210,26 +249,33 @@ public class RsaKeyGenerator implements InitializingBean {
 	 * public 키로 복호화
 	 */
 	public String decryptPubRSA(String encrypted, String publicKey) {
+		String normalized = encrypted.trim().replaceAll("\\s+", "");
+		byte[] decoded;
+
 		try {
-			PublicKey pubKey = getPublicKey(publicKey);
+			decoded = Base64.getDecoder().decode(normalized);
+
+		} catch (IllegalArgumentException e) {
+			throw new TokenException(TokenError.INVALID_ENCRYPTED_TEXT, e);
+		}
+
+		try {
+			PublicKey pub = getPublicKey(publicKey);
+
 			Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-			String fixedEncrypted = encrypted.trim().replaceAll("\\s+", "");
-			byte[] byteEncrypted = Base64.getDecoder().decode(fixedEncrypted);
-			cipher.init(Cipher.DECRYPT_MODE, pubKey);
-			byte[] bytePlain = cipher.doFinal(byteEncrypted);
-			return new String(bytePlain, StandardCharsets.UTF_8);
-		} catch (NoSuchAlgorithmException e) {
-			throw new TokenException(TokenError.RSA_ALGORITHM_NOT_FOUND);
-		} catch (InvalidKeySpecException e) {
-			throw new TokenException(TokenError.INVALID_PUBLIC_KEY_SPEC);
+			cipher.init(Cipher.DECRYPT_MODE, pub);
+
+			byte[] decrypted = cipher.doFinal(decoded);
+			return new String(decrypted, StandardCharsets.UTF_8);
+
 		} catch (InvalidKeyException e) {
-			throw new TokenException(TokenError.INVALID_PUBLIC_KEY);
-		} catch (NoSuchPaddingException e) {
-			throw new TokenException(TokenError.INVALID_PADDING);
-		} catch (IllegalBlockSizeException | BadPaddingException e) {
-			throw new TokenException(TokenError.DECRYPTION_FAILED);
-		} catch (Exception e) {
-			throw new TokenException(TokenError.INVALID_TOKEN);
+			throw new TokenException(TokenError.INVALID_PUBLIC_KEY, e);
+
+		} catch (BadPaddingException | IllegalBlockSizeException e) {
+			throw new TokenException(TokenError.DECRYPTION_FAILED, e);
+
+		} catch (NoSuchPaddingException | NoSuchAlgorithmException e) {
+			throw new TokenException(TokenError.RSA_ALGORITHM_NOT_FOUND, e);
 		}
 	}
 }
