@@ -26,6 +26,11 @@ public class TokenProperties {
 	private static TokenProperties instance = new TokenProperties();
 
 	/**
+	 * 라이브러리명
+	 */
+	private static final String name = "JWT4J";
+
+	/**
 	 * 키 페어 경로
 	 */
 	protected String path = "./files/";

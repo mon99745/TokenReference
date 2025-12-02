@@ -1,6 +1,7 @@
 package io.jwt4j.lite.core.util;
 
 import com.google.common.annotations.VisibleForTesting;
+import io.jwt4j.lite.core.config.TokenProperties;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
@@ -10,12 +11,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-import static io.jwt4j.lite.core.config.TokenProperties.PROPERTY_PREFIX;
 
 @Slf4j
 @Component
 public class SpringUtil {
-	public static final String SPRING_CONFIG_NAME = PROPERTY_PREFIX;
+	public static final String SPRING_CONFIG_NAME = TokenProperties.PROPERTY_PREFIX + ".name";
 	private static final ExpressionParser EXPRESSION_PARSER = new SpelExpressionParser();
 
 	@Setter
@@ -25,6 +25,7 @@ public class SpringUtil {
 	public SpringUtil(Environment environment) {
 		SpringUtil.environment = environment;
 	}
+
 	public static Optional<Environment> getEnvironment() {
 		if (environment == null) {
 			return Optional.empty();

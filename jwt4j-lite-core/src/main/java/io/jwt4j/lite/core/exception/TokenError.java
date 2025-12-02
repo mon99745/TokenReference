@@ -10,26 +10,15 @@ import io.jwt4j.lite.core.exception.common.Error;
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
 public enum TokenError
 		implements Error {
-
-	/**
-	 * USER ERROR
-	 */
 	INVALID_KEY_INPUT(TokenError.CODE_PREFIX + "01-00", "잘못된 키 입력입니다.", HttpStatus.BAD_REQUEST),
-
 	INVALID_TOKEN(TokenError.CODE_PREFIX + "01-01", "토큰이 위변조 되었습니다.", HttpStatus.BAD_REQUEST),
 	MISSING_KEY(TokenError.CODE_PREFIX + "01-02", "필수 키 값이 누락되었습니다.", HttpStatus.BAD_REQUEST),
 	MISSING_CLAIM(TokenError.CODE_PREFIX + "01-03", "필수 JWT Claim이 누락되었습니다.", HttpStatus.BAD_REQUEST),
 	INVALID_CLAIM_FORMAT(TokenError.CODE_PREFIX + "01-04", "토큰 구조가 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
-
-	/**
-	 * SYSTEM ERROR
-	 */
 	KEY_ENCODING_FAILED(TokenError.CODE_PREFIX + "02-01", "키 인코딩 중 시스템 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
 	BASE58_ENCODING_FAILED(TokenError.CODE_PREFIX + "02-02", "Base58 인코딩 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
 	JWT_CREATION_FAILED(TokenError.CODE_PREFIX + "02-03", "JWT 생성 중 시스템 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
 	FAILED_ENCRYPT(TokenError.CODE_PREFIX + "02-03", "Failed to encrypt", HttpStatus.INTERNAL_SERVER_ERROR),
-
-	// RSA
 	RSA_ALGORITHM_NOT_FOUND(TokenError.CODE_PREFIX + "01-01", "RSA 알고리즘을 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
 	INVALID_PRIVATE_KEY_SPEC(TokenError.CODE_PREFIX + "01-02", "잘못된 Private Key 형식입니다.", HttpStatus.BAD_REQUEST),
 	INVALID_PRIVATE_KEY(TokenError.CODE_PREFIX + "01-03", "Private Key가 유효하지 않습니다.", HttpStatus.BAD_REQUEST),
@@ -50,7 +39,7 @@ public enum TokenError
 
 	;
 
-	public static final String CODE_PREFIX = "token-";
+	public static final String CODE_PREFIX = "TK-";
 
 	private final String code;
 	private final String message;
