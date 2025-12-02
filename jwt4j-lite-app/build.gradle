@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'org.springframework.boot'
 }
 
 ext {
@@ -11,6 +12,10 @@ bootJar {
     enabled = true
     archiveBaseName.set(libName)
     archiveVersion.set(libVersion)
+}
+
+jar {
+    enabled = false
 }
 
 repositories {
