@@ -15,7 +15,8 @@ springdoc:
 token:
   info:
     name: JWT4J
-    path: ./files/        # 키 페어 저장 경로
+    path: ./files/licAgentKey/        # 키 페어 저장 경로
+#    path: ./files/        # 키 페어 저장 경로
     key-size: 2048        # 키 페어 크기
     typ: jsonwebtoken     # 토큰 타입
     exp: 3600000          # 토큰 만료 시간 (밀리초 단위, 1시간)
