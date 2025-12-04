@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
 @Slf4j
@@ -51,8 +52,8 @@ public class TokenUtil {
 			Claims.RegisteredClaim registeredClaim = Claims.RegisteredClaim.builder()
 					.issuer(iss) // 발급자
 					.subject(sub) // 주제
-					.expiration(String.valueOf(exp)) // 만료 시간 (ISO-8601 형식)
-					.issuedAt(String.valueOf(now)) // 발급 시간 (ISO-8601 형식)
+					.expiration(exp.truncatedTo(ChronoUnit.SECONDS).toString())
+					.issuedAt(now.truncatedTo(ChronoUnit.SECONDS).toString())
 					.build();
 
 			Claims.PublicClaim publicClaim = Claims.PublicClaim.builder()
