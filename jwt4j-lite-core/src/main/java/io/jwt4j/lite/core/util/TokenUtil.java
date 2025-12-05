@@ -163,8 +163,7 @@ public class TokenUtil {
 				Instant expirationTime = Instant.ofEpochMilli(expMillis);
 				return Instant.now().isAfter(expirationTime);
 			} catch (NumberFormatException ignored) {
-				// ISO 8601 문자열이면 LocalDateTime 사용
-				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 				LocalDateTime expirationTime = LocalDateTime.parse(expStr, formatter);
 				return LocalDateTime.now().isAfter(expirationTime);
 			}
