@@ -1,5 +1,6 @@
 package io.jwt4j.lite.core.exception.common;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -30,7 +31,8 @@ public class CommonExceptionHandler {
 		body.put("message", ex.getMessage());
 		body.put("path", request.getRequestURI());
 
-		return ResponseEntity.status(400).body(body);
+		HttpStatus status = ex.getError() != null ? ex.getError().getHttpStatus() : HttpStatus.BAD_REQUEST;
+		return ResponseEntity.status(status).body(body);
 	}
 
 	/**

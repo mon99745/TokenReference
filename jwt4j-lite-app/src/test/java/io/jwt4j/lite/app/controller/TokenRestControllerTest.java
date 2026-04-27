@@ -72,4 +72,31 @@ class TokenRestControllerTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$").isNotEmpty());
 	}
+
+	@Test
+	@DisplayName("만료된 토큰 검증 시 400 및 만료 오류 코드 반환 테스트")
+	void t04verifyExpiredToken() throws Exception {
+		final String[] expiredJwt = {""};
+
+		// exp=-1: 현재 시각 -1초로 발급 즉시 만료된 토큰 생성
+		String expiredClaim = "{\"uniqueId\":\"9999\",\"exp\":\"-1\"}";
+
+		mvc.perform(post(TokenRestController.PATH + "/createToken")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(expiredClaim)
+						.session(SESSION))
+				.andExpect(status().isOk())
+				.andDo(r -> {
+					Map<String, Object> response = JsonUtil.readValueMap(r.getResponse().getContentAsString());
+					expiredJwt[0] = (String) response.get("jwt");
+				});
+
+		mvc.perform(post(TokenRestController.PATH + "/verifyToken")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(JsonUtil.writeValueAsString(Collections.singletonMap("jwt", expiredJwt[0])))
+						.session(SESSION))
+				.andDo(print())
+				.andExpect(status().isUnauthorized())
+				.andExpect(jsonPath("$.code").value("TK-01-11"));
+	}
 }
