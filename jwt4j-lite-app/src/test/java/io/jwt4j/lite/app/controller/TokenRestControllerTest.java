@@ -1,12 +1,16 @@
 package io.jwt4j.lite.app.controller;
 
-
 import io.jwt4j.lite.app.annotation.ControllerTest;
+import io.jwt4j.lite.core.util.JsonUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.Collections;
+import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -21,40 +25,36 @@ class TokenRestControllerTest {
 	@Autowired
 	private MockMvc mvc;
 
-	/**
-	 * claim
-	 */
-	private static String claim = "{\n" +
+	private static final String claim = "{\n" +
 			"  \"uniqueId\": \"1000\",\n" +
 			"  \"name\" : \"test\",\n" +
 			"  \"num\" : \"10\"\n" +
 			"}";
 
-	/**
-	 * 발행 토큰
-	 */
-	private static String jwt = "wtEhRDrZpioF.29Le3YBWnhCnozVCv9Abj2AwT5b8eWkZDivMEBw3eXgbPL13HgvJZyRJWzrHkbfovcEv4B" +
-			"DGaiZePdDRXjpN9F9m.OxJt6IAaxD67lH3ANBlJKkypXxDjhBD8j0bjrkKEKft200sJDAXTk2JT0DOr6T4s+OUOnKlWc8UpfsaxbX5h" +
-			"RXWnNSY1gbh/qAKMNnoZcx5s6gHjDMYUgQp6ANhMszVPHUUeHSzfGNbg7fLk3WdTWafG2bBtzHEbbYNh1u8PPv0iF0g5cNDUOsdOtHS" +
-			"CqbZ9fUk3mMPIxSkZtoDmUTsiIy2x/NyPZtRfxTkNX/12tieiwFw6S65EZvinC9kpPxAUMaNZGtF6c7vADLwQpDuxEPlh7h3kWPRtgJ" +
-			"JcAU3zzZRmFwgKhwcDueLlvGHdUzlziX/42kusJVz1p8UuAo9EXw==";
+	private static String jwt = "";
 
 	@Test
 	@DisplayName("토큰(JWT) 발행 테스트")
 	void t01createToken() throws Exception {
 		mvc.perform(post(TokenRestController.PATH + "/createToken")
+						.contentType(MediaType.APPLICATION_JSON)
 						.content(claim)
 						.session(SESSION))
 				.andDo(print())
 				.andExpect(status().isOk())
-				.andDo(r -> jwt = r.getResponse().getContentAsString());
+				.andExpect(jsonPath("$.jwt").isNotEmpty())
+				.andDo(r -> {
+					Map<String, Object> response = JsonUtil.readValueMap(r.getResponse().getContentAsString());
+					jwt = (String) response.get("jwt");
+				});
 	}
 
 	@Test
 	@DisplayName("토큰(JWT) 검증 테스트")
 	void t02verifyToken() throws Exception {
 		mvc.perform(post(TokenRestController.PATH + "/verifyToken")
-						.content(jwt)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(JsonUtil.writeValueAsString(Collections.singletonMap("jwt", jwt)))
 						.session(SESSION))
 				.andDo(print())
 				.andExpect(status().isOk())
@@ -65,7 +65,8 @@ class TokenRestControllerTest {
 	@DisplayName("토큰(JWT)에서 클레임 추출 테스트")
 	void t03extractClaimInToken() throws Exception {
 		mvc.perform(post(TokenRestController.PATH + "/extractClaim")
-						.content(jwt)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(JsonUtil.writeValueAsString(Collections.singletonMap("jwt", jwt)))
 						.session(SESSION))
 				.andDo(print())
 				.andExpect(status().isOk())

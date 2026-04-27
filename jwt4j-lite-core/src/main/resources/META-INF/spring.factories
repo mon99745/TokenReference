@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  io.jwt4j.lite.core.config.TokenAutoConfig
