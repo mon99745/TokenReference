@@ -29,7 +29,7 @@ public enum TokenError
 	DECRYPTION_FAILED(TokenError.CODE_PREFIX + "01-08", "복호화 처리 중 오류가 발생했습니다.", HttpStatus.BAD_REQUEST),
 	UNKNOWN_ENCRYPTION_ERROR(TokenError.CODE_PREFIX + "01-09", "Private 키 암호화 중 알 수 없는 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
 	UNKNOWN_DECRYPTION_ERROR(TokenError.CODE_PREFIX + "01-10", "Public 키 복호화 중 알 수 없는 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
-	EXPIRED_TOKEN(TokenError.CODE_PREFIX + "01-11", "토큰이 만료되었습니다.", HttpStatus.BAD_REQUEST),
+	EXPIRED_TOKEN(TokenError.CODE_PREFIX + "01-11", "토큰이 만료되었습니다.", HttpStatus.UNAUTHORIZED),
 	INVALID_CLAIM_TIME_FORMAT(TokenError.CODE_PREFIX + "01-12", "Claim 시간 형식이 올바르지 않습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
 	INVALID_ENCRYPTED_TEXT(TokenError.CODE_PREFIX + "02-05", "암호문이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
 	KEY_GENERATION_FAILED(TokenError.CODE_PREFIX + "02-08", "RSA 키 생성에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),

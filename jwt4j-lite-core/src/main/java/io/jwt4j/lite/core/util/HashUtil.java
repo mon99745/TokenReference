@@ -9,7 +9,7 @@ public class HashUtil {
 	 * SHA-256은 암호화 해시 함수
 	 *
 	 * @param plainText 평문
-	 * @return
+	 * @return SHA-256 해시값의 16진수 문자열
 	 */
 	public static String sha256(String plainText) {
 		try {

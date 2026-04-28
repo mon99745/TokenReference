@@ -1,5 +1,6 @@
 package io.jwt4j.lite.core.exception.common;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -17,9 +18,9 @@ public class CommonExceptionHandler {
 	/**
 	 * 공통 서브 모듈 예외 처리
 	 *
-	 * @param ex
-	 * @param request
-	 * @return
+	 * @param ex      DefaultException 예외
+	 * @param request HTTP 요청
+	 * @return HTTP 오류 응답 엔티티
 	 */
 	@ExceptionHandler(DefaultException.class)
 	public ResponseEntity<Map<String, Object>> handleDefaultException(DefaultException ex,
@@ -30,15 +31,16 @@ public class CommonExceptionHandler {
 		body.put("message", ex.getMessage());
 		body.put("path", request.getRequestURI());
 
-		return ResponseEntity.status(400).body(body);
+		HttpStatus status = ex.getError() != null ? ex.getError().getHttpStatus() : HttpStatus.BAD_REQUEST;
+		return ResponseEntity.status(status).body(body);
 	}
 
 	/**
 	 * 기타 일반 예외 처리
 	 *
-	 * @param ex
-	 * @param request
-	 * @return
+	 * @param ex      처리되지 않은 예외
+	 * @param request HTTP 요청
+	 * @return HTTP 500 오류 응답 엔티티
 	 */
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex,
