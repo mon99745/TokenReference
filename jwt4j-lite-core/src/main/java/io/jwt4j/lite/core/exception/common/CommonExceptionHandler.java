@@ -18,9 +18,9 @@ public class CommonExceptionHandler {
 	/**
 	 * 공통 서브 모듈 예외 처리
 	 *
-	 * @param ex
-	 * @param request
-	 * @return
+	 * @param ex      DefaultException 예외
+	 * @param request HTTP 요청
+	 * @return HTTP 오류 응답 엔티티
 	 */
 	@ExceptionHandler(DefaultException.class)
 	public ResponseEntity<Map<String, Object>> handleDefaultException(DefaultException ex,
@@ -38,9 +38,9 @@ public class CommonExceptionHandler {
 	/**
 	 * 기타 일반 예외 처리
 	 *
-	 * @param ex
-	 * @param request
-	 * @return
+	 * @param ex      처리되지 않은 예외
+	 * @param request HTTP 요청
+	 * @return HTTP 500 오류 응답 엔티티
 	 */
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex,

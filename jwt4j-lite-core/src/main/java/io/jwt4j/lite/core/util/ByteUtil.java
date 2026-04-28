@@ -12,9 +12,9 @@ public class ByteUtil {
 	/**
 	 * 문자열을 바이트 코드로 변환
 	 *
-	 * @param str
-	 * @return
-	 * @throws IOException
+	 * @param str 변환할 문자열
+	 * @return UTF-8 인코딩된 바이트 배열
+	 * @throws IOException IO 오류 발생 시
 	 */
 	public static byte[] stringToBytes(String str) throws IOException {
 		byte[] byteData = str.getBytes("UTF-8");
@@ -24,9 +24,9 @@ public class ByteUtil {
 	/**
 	 * 바이트 코드를 UTF-8 문자열로 변환
 	 *
-	 * @param bytes
-	 * @return
-	 * @throws IOException
+	 * @param bytes 변환할 바이트 배열
+	 * @return UTF-8 디코딩된 문자열
+	 * @throws IOException IO 오류 발생 시
 	 */
 	public static String bytesToUtfString(byte[] bytes) throws IOException {
 		String strData = new String(bytes, "UTF-8");
@@ -36,8 +36,8 @@ public class ByteUtil {
 	/**
 	 * 바이트를 16진수 문자열로 변환
 	 *
-	 * @param hashData
-	 * @return
+	 * @param hashData 변환할 바이트 배열
+	 * @return 16진수 문자열 StringBuilder
 	 */
 	public static StringBuilder bytesToHexString(byte[] hashData) {
 		StringBuilder hexString = new StringBuilder();
@@ -55,9 +55,9 @@ public class ByteUtil {
 	 * 객체를 바이트 배열로 변환
 	 * Serialization
 	 *
-	 * @param obj
-	 * @return
-	 * @throws IOException
+	 * @param obj 직렬화할 객체
+	 * @return 직렬화된 바이트 배열
+	 * @throws IOException IO 오류 발생 시
 	 */
 	public static byte[] objectToBytes(Object obj) throws IOException {
 		try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -71,10 +71,10 @@ public class ByteUtil {
 	 * 바이트 배열을 객체로 변환
 	 * Deserialization
 	 *
-	 * @param bytes
-	 * @return
-	 * @throws IOException
-	 * @throws ClassNotFoundException
+	 * @param bytes 역직렬화할 바이트 배열
+	 * @return 역직렬화된 객체
+	 * @throws IOException IO 오류 발생 시
+	 * @throws ClassNotFoundException 클래스를 찾을 수 없는 경우
 	 */
 	public static Object bytesToObject(byte[] bytes) throws IOException, ClassNotFoundException {
 		try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
